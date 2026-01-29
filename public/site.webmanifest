@@ -1,0 +1,16 @@
+{
+  "name": "Speedboat Ticket",
+  "short_name": "Speedboat",
+  "description": "Book speedboat tickets easily and securely",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0891b2",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -1,0 +1,576 @@
+{
+  "common": {
+    "appName": "Speedboat Ticket",
+    "loading": "Loading...",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "filter": "Filter",
+    "reset": "Reset",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "or": "or",
+    "and": "and",
+    "all": "All",
+    "none": "None",
+    "noData": "No data available",
+    "noResults": "No results found",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information"
+  },
+
+  "navigation": {
+    "home": "Home",
+    "search": "Search Trips",
+    "booking": "Booking",
+    "destinations": "Destinations",
+    "myBookings": "My Bookings",
+    "profile": "Profile",
+    "settings": "Settings",
+    "dashboard": "Dashboard",
+    "logout": "Sign Out",
+    "login": "Sign In",
+    "register": "Get Started",
+    "viewTrips": "View your trips",
+    "manageAccount": "Manage your account",
+    "manageSystem": "Manage system"
+  },
+
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Enter your credentials to access your account",
+      "email": "Email Address",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in",
+      "signingIn": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create account",
+      "continueWithGoogle": "Continue with Google",
+      "orContinueWith": "or continue with email",
+      "termsText": "By signing in, you agree to our",
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy",
+      "and": "and",
+      "errors": {
+        "invalidCredentials": "Invalid email or password",
+        "emailNotVerified": "Please verify your email first",
+        "accountLocked": "Account locked. Try again later.",
+        "tooManyAttempts": "Too many attempts. Please try again later."
+      }
+    },
+    "register": {
+      "title": "Create an account",
+      "subtitle": "Sign up to start booking speedboat tickets",
+      "name": "Full Name",
+      "namePlaceholder": "John Doe",
+      "email": "Email Address",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "••••••••",
+      "passwordRequirements": "Minimum 8 characters with uppercase, lowercase, and number",
+      "submit": "Create account",
+      "creating": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "termsNotice": "By creating an account, you agree to our",
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy",
+      "goToLogin": "Go to Login",
+      "registerAnother": "Register another account",
+      "passwordStrength": {
+        "minLength": "8+ characters",
+        "uppercase": "Uppercase",
+        "lowercase": "Lowercase",
+        "number": "Number"
+      },
+      "success": {
+        "title": "Check your email",
+        "message": "We've sent a verification link to:",
+        "instructions": "Click the link in the email to verify your account and start booking tickets. The link will expire in 24 hours.",
+        "noEmail": "Didn't receive the email? Check your spam folder or",
+        "tryAgain": "try again"
+      }
+    },
+    "verifyEmail": {
+      "title": "Verify Your Email",
+      "verifying": "Verifying your email...",
+      "pleaseWait": "Please wait while we verify your email address.",
+      "success": "Email Verified!",
+      "successMessage": "Your account is now active. You can sign in and start booking tickets!",
+      "failed": "Verification Failed",
+      "expired": "Link Expired",
+      "expiredMessage": "This verification link has expired.",
+      "invalidLink": "Invalid verification link. Please request a new one.",
+      "resend": "Resend",
+      "goToLogin": "Go to Login",
+      "backToHome": "Back to Home",
+      "needNewLink": "Need a new verification link?",
+      "didntReceive": "Didn't receive the email?",
+      "enterEmail": "Enter your email",
+      "resendSuccess": "If an account exists with this email and is not yet verified, you will receive a new verification link.",
+      "checkInbox": "Check your inbox for the verification link we sent you. Click the link to verify your email address."
+    },
+    "forgotPassword": {
+      "title": "Forgot your password?",
+      "subtitle": "No worries, we'll send you reset instructions.",
+      "email": "Email Address",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send Reset Link",
+      "sending": "Sending...",
+      "backToLogin": "Back to Login",
+      "tryAnother": "Try another email",
+      "success": {
+        "title": "Check your email",
+        "message": "If an account exists for",
+        "instructions": "we've sent a password reset link. The link will expire in 1 hour."
+      }
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your new password below.",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "submit": "Reset Password",
+      "resetting": "Resetting...",
+      "backToLogin": "Back to Login",
+      "passwordStrength": {
+        "minLength": "At least 8 characters",
+        "uppercase": "One uppercase letter",
+        "lowercase": "One lowercase letter",
+        "number": "One number"
+      },
+      "success": {
+        "title": "Password Reset!",
+        "message": "Your password has been reset successfully. You can now sign in with your new password.",
+        "signIn": "Sign in"
+      },
+      "invalidLink": {
+        "title": "Invalid Reset Link",
+        "message": "This password reset link is invalid or has expired. Please request a new one.",
+        "requestNew": "Request New Reset Link",
+        "backToLogin": "Back to Login"
+      },
+      "loading": "Loading..."
+    },
+    "resendVerification": {
+      "button": "Resend verification email",
+      "sending": "Sending...",
+      "success": "Verification email sent! Check your inbox."
+    }
+  },
+
+  "home": {
+    "hero": {
+      "badge": "Fast & Reliable Sea Travel",
+      "title": "Travel Across Islands",
+      "subtitle": "Fast & Comfortable",
+      "description": "Book your speedboat tickets easily and enjoy seamless sea travel across the beautiful Indonesian archipelago.",
+      "searchPlaceholder": "Where do you want to go?"
+    },
+    "stats": {
+      "travelers": "Happy Travelers",
+      "routes": "Routes Available",
+      "rating": "User Rating",
+      "onTime": "On-time Rate"
+    },
+    "routes": {
+      "badge": "Popular Destinations",
+      "title": "Explore",
+      "titleHighlight": "Popular Routes",
+      "subtitle": "Discover the most traveled sea routes across the archipelago",
+      "from": "FROM",
+      "to": "TO",
+      "startingFrom": "Starting from",
+      "viewAll": "View All Routes"
+    },
+    "features": {
+      "badge": "Why Choose Us",
+      "title": "Experience",
+      "titleHighlight": "The Best",
+      "subtitle": "Experience the best in sea travel booking with our premium features",
+      "fast": {
+        "title": "Fast Booking",
+        "description": "Book your speedboat tickets in minutes with our easy-to-use platform."
+      },
+      "secure": {
+        "title": "Secure Payment",
+        "description": "Safe and secure payment with multiple payment options available."
+      },
+      "eticket": {
+        "title": "Instant E-Ticket",
+        "description": "Receive your e-ticket instantly after payment confirmation."
+      },
+      "routes": {
+        "title": "Multiple Routes",
+        "description": "Wide coverage of sea routes across Indonesian archipelago."
+      }
+    },
+    "cta": {
+      "badge": "Start Your Journey",
+      "title": "Ready to",
+      "titleHighlight": "Set Sail?",
+      "description": "Start your journey today. Book your speedboat ticket now and experience the fastest way to travel between islands.",
+      "badges": {
+        "confirmation": "Instant Confirmation",
+        "secure": "Secure Payment",
+        "support": "24/7 Support"
+      },
+      "searchButton": "Search Schedules",
+      "learnMore": "Learn More"
+    },
+    "search": {
+      "from": "From",
+      "to": "To",
+      "date": "Date",
+      "passengers": "Passengers",
+      "passenger": "Passenger",
+      "searchButton": "Search Schedules",
+      "selectPort": "Select port"
+    },
+    "popularRoutes": {
+      "title": "Popular Routes",
+      "subtitle": "Most booked destinations",
+      "viewAll": "View All Routes"
+    }
+  },
+
+  "search": {
+    "title": "Search Schedules",
+    "subtitle": "Available schedules for your trip",
+    "backToHome": "Back to Home",
+    "empty": {
+      "title": "Search for Schedules",
+      "description": "Use the search form above to find available speedboat schedules."
+    },
+    "filters": {
+      "title": "Filters",
+      "time": "Departure Time",
+      "price": "Price Range",
+      "ship": "Ship",
+      "morning": "Morning (06:00 - 12:00)",
+      "afternoon": "Afternoon (12:00 - 18:00)",
+      "evening": "Evening (18:00 - 24:00)"
+    },
+    "sort": {
+      "label": "Sort by",
+      "priceAsc": "Price: Low to High",
+      "priceDesc": "Price: High to Low",
+      "timeAsc": "Departure: Earliest",
+      "timeDesc": "Departure: Latest"
+    },
+    "results": {
+      "found": "Found {count} schedule(s) for",
+      "passengers": "{count} passenger(s)",
+      "noResults": "No Schedules Found",
+      "noResultsDescription": "No available schedules for your selected route and date.",
+      "tryAlternatives": "Try these alternative dates:",
+      "tryAnother": "Try selecting a different date or route"
+    },
+    "schedule": {
+      "departure": "Departure",
+      "arrival": "Arrival",
+      "duration": "Duration",
+      "ship": "Ship",
+      "seatsLeft": "{count} seats left",
+      "pricePerPerson": "Price per person",
+      "bookNow": "Book Now",
+      "soldOut": "Sold Out"
+    }
+  },
+
+  "booking": {
+    "title": "Complete Your Booking",
+    "steps": {
+      "passengers": "Passenger Details",
+      "review": "Review",
+      "payment": "Payment"
+    },
+    "schedule": {
+      "title": "Trip Details",
+      "route": "Route",
+      "date": "Date",
+      "time": "Time",
+      "ship": "Ship",
+      "duration": "Duration"
+    },
+    "passenger": {
+      "title": "Passenger {number}",
+      "name": "Full Name (as on ID)",
+      "namePlaceholder": "Enter full name",
+      "idType": "ID Type",
+      "idNumber": "ID Number",
+      "idNumberPlaceholder": "Enter ID number",
+      "phone": "Phone Number",
+      "phonePlaceholder": "Enter phone number",
+      "idTypes": {
+        "ktp": "National ID (KTP)",
+        "passport": "Passport",
+        "sim": "Driver's License (SIM)"
+      }
+    },
+    "summary": {
+      "title": "Booking Summary",
+      "passengers": "Passengers",
+      "pricePerPerson": "Price per person",
+      "totalPassengers": "Total passengers",
+      "subtotal": "Subtotal",
+      "serviceFee": "Service fee",
+      "total": "Total",
+      "continueToPayment": "Continue to Payment"
+    },
+    "payment": {
+      "title": "Payment",
+      "subtitle": "Complete your payment to confirm booking",
+      "method": "Payment Method",
+      "methods": {
+        "bankTransfer": "Bank Transfer",
+        "eWallet": "E-Wallet",
+        "creditCard": "Credit Card",
+        "qris": "QRIS"
+      },
+      "timer": "Complete payment within",
+      "expired": "Payment time expired",
+      "payNow": "Pay Now",
+      "instructions": "Payment Instructions"
+    },
+    "success": {
+      "title": "Booking Confirmed!",
+      "message": "Your booking has been confirmed. Check your email for the e-ticket.",
+      "bookingCode": "Booking Code",
+      "viewTicket": "View E-Ticket",
+      "bookAnother": "Book Another Trip"
+    },
+    "errors": {
+      "noSeats": "Sorry, no seats available for this schedule",
+      "paymentFailed": "Payment failed. Please try again.",
+      "sessionExpired": "Session expired. Please start over."
+    }
+  },
+
+  "ticket": {
+    "title": "E-Ticket",
+    "boardingPass": "Boarding Pass",
+    "passenger": "Passenger",
+    "from": "From",
+    "to": "To",
+    "date": "Date",
+    "time": "Time",
+    "ship": "Ship",
+    "seat": "Seat",
+    "bookingCode": "Booking Code",
+    "ticketCode": "Ticket Code",
+    "status": {
+      "valid": "Valid",
+      "used": "Used",
+      "cancelled": "Cancelled"
+    },
+    "qrInstruction": "Show this QR code to the operator when boarding",
+    "download": "Download PDF",
+    "share": "Share"
+  },
+
+  "dashboard": {
+    "user": {
+      "title": "My Dashboard",
+      "welcome": "Welcome back, {name}!",
+      "stats": {
+        "totalBookings": "Total Bookings",
+        "upcomingTrips": "Upcoming Trips",
+        "completedTrips": "Completed Trips"
+      },
+      "upcomingBookings": "Upcoming Bookings",
+      "noUpcoming": "No upcoming bookings",
+      "bookNow": "Book a Trip",
+      "recentBookings": "Recent Bookings",
+      "viewAll": "View All"
+    },
+    "admin": {
+      "title": "Admin Dashboard",
+      "stats": {
+        "totalBookings": "Total Bookings",
+        "todayBookings": "Today's Bookings",
+        "revenue": "Revenue (This Month)",
+        "activeSchedules": "Active Schedules"
+      },
+      "quickActions": "Quick Actions",
+      "recentBookings": "Recent Bookings"
+    },
+    "menu": {
+      "overview": "Overview",
+      "bookings": "Bookings",
+      "ships": "Ships",
+      "ports": "Ports",
+      "routes": "Routes",
+      "schedules": "Schedules",
+      "users": "Users",
+      "reports": "Reports",
+      "settings": "Settings",
+      "validate": "Check-in",
+      "manifest": "Passenger Manifest",
+      "payments": "Payments",
+      "switchView": "Switch View",
+      "userView": "User View",
+      "operatorView": "Operator View",
+      "adminView": "Admin View",
+      "myAccount": "My Account",
+      "backToHome": "Back to Home"
+    }
+  },
+
+  "profile": {
+    "title": "My Profile",
+    "personalInfo": "Personal Information",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "saveChanges": "Save Changes",
+    "success": "Profile updated successfully"
+  },
+
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "minLength": "Must be at least {min} characters",
+    "maxLength": "Must be less than {max} characters",
+    "passwordMismatch": "Passwords do not match",
+    "passwordWeak": "Password must contain uppercase, lowercase, and number",
+    "invalidPhone": "Please enter a valid phone number",
+    "invalidIdNumber": "Please enter a valid ID number"
+  },
+
+  "errors": {
+    "general": "Something went wrong. Please try again.",
+    "notFound": "Page not found",
+    "notFoundMessage": "The page you're looking for doesn't exist.",
+    "unauthorized": "Unauthorized",
+    "unauthorizedMessage": "You need to sign in to access this page.",
+    "forbidden": "Access Denied",
+    "forbiddenMessage": "You don't have permission to access this page.",
+    "serverError": "Server Error",
+    "serverErrorMessage": "Something went wrong on our end. Please try again later.",
+    "networkError": "Network Error",
+    "networkErrorMessage": "Please check your internet connection.",
+    "goHome": "Go to Homepage",
+    "goBack": "Go Back",
+    "tryAgain": "Try Again",
+    "oauthSignin": "Error starting the sign-in process. Please try again.",
+    "oauthCallback": "Error during the sign-in process. Please try again.",
+    "oauthAccountNotLinked": "This email is already associated with another account.",
+    "accessDenied": "Access denied. You may not have permission to sign in.",
+    "configuration": "Server configuration error. Please contact support.",
+    "credentialsSignin": "Invalid email or password. Please try again."
+  },
+
+  "footer": {
+    "brand": {
+      "name": "SpeedBoat",
+      "tagline": "Ticket Booking",
+      "description": "Your trusted partner for fast, comfortable, and reliable sea travel across Indonesian islands. Book your journey today!"
+    },
+    "newsletter": {
+      "title": "Subscribe to our newsletter",
+      "description": "Get exclusive deals, travel tips, and updates delivered to your inbox",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe"
+    },
+    "sections": {
+      "explore": "Explore",
+      "company": "Company",
+      "support": "Support",
+      "legal": "Legal"
+    },
+    "links": {
+      "explore": {
+        "popularRoutes": "Popular Routes",
+        "destinations": "Destinations",
+        "travelDeals": "Travel Deals",
+        "schedule": "Schedule"
+      },
+      "company": {
+        "about": "About Us",
+        "careers": "Careers",
+        "press": "Press & Media",
+        "partners": "Partners"
+      },
+      "support": {
+        "helpCenter": "Help Center",
+        "faqs": "FAQs",
+        "contact": "Contact Us",
+        "refund": "Refund Policy"
+      },
+      "legal": {
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "cookies": "Cookie Policy",
+        "licenses": "Licenses"
+      }
+    },
+    "copyright": "All rights reserved.",
+    "madeWith": "Made with",
+    "inIndonesia": "in Indonesia"
+  },
+
+  "time": {
+    "hours": "hours",
+    "minutes": "minutes",
+    "seconds": "seconds",
+    "hour": "hour",
+    "minute": "minute",
+    "second": "second"
+  },
+
+  "currency": {
+    "code": "IDR",
+    "symbol": "Rp"
+  },
+
+  "destinations": {
+    "hero": {
+      "badge": "Explore Destinations",
+      "title": "Discover Amazing Destinations",
+      "subtitle": "Browse through our extensive network of ports and find your next sea adventure"
+    },
+    "search": {
+      "placeholder": "Search destinations by name, city, or province..."
+    },
+    "loading": "Loading destinations...",
+    "empty": {
+      "title": "No destinations found",
+      "description": "Try adjusting your search or check back later for new destinations."
+    },
+    "results": {
+      "title": "All Destinations",
+      "count": "{count} destinations available"
+    },
+    "card": {
+      "routes": "{count} routes",
+      "explore": "Explore"
+    },
+    "cta": {
+      "title": "Ready to set sail?",
+      "description": "Search for available trips and book your tickets now. Fast, secure, and hassle-free booking.",
+      "button": "Search Trips"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  # Main application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=${DATABASE_URL}
+        - NEXTAUTH_URL=${NEXTAUTH_URL}
+        - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+        - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+        - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+        - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY}
+        - MIDTRANS_CLIENT_KEY=${MIDTRANS_CLIENT_KEY}
+        - MIDTRANS_IS_PRODUCTION=${MIDTRANS_IS_PRODUCTION}
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY}
+      - MIDTRANS_CLIENT_KEY=${MIDTRANS_CLIENT_KEY}
+      - MIDTRANS_IS_PRODUCTION=${MIDTRANS_IS_PRODUCTION}
+    restart: unless-stopped
+    depends_on:
+      - db
+    networks:
+      - speedboat-network
+
+  # PostgreSQL Database (for local development)
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=speedboat
+      - POSTGRES_PASSWORD=speedboat_password
+      - POSTGRES_DB=speedboat_ticket
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - speedboat-network
+
+  # Adminer (Database management UI) - optional
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - db
+    networks:
+      - speedboat-network
+
+volumes:
+  postgres_data:
+
+networks:
+  speedboat-network:
+    driver: bridge

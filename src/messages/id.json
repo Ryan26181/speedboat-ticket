@@ -1,0 +1,576 @@
+{
+  "common": {
+    "appName": "Tiket Speedboat",
+    "loading": "Memuat...",
+    "submit": "Kirim",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "delete": "Hapus",
+    "edit": "Ubah",
+    "view": "Lihat",
+    "search": "Cari",
+    "filter": "Filter",
+    "reset": "Reset",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "previous": "Sebelumnya",
+    "confirm": "Konfirmasi",
+    "close": "Tutup",
+    "yes": "Ya",
+    "no": "Tidak",
+    "or": "atau",
+    "and": "dan",
+    "all": "Semua",
+    "none": "Tidak ada",
+    "noData": "Tidak ada data",
+    "noResults": "Tidak ada hasil ditemukan",
+    "success": "Berhasil",
+    "error": "Kesalahan",
+    "warning": "Peringatan",
+    "info": "Informasi"
+  },
+
+  "navigation": {
+    "home": "Beranda",
+    "search": "Cari Perjalanan",
+    "booking": "Pemesanan",
+    "destinations": "Destinasi",
+    "myBookings": "Pesanan Saya",
+    "profile": "Profil",
+    "settings": "Pengaturan",
+    "dashboard": "Dasbor",
+    "logout": "Keluar",
+    "login": "Masuk",
+    "register": "Mulai Sekarang",
+    "viewTrips": "Lihat perjalanan Anda",
+    "manageAccount": "Kelola akun Anda",
+    "manageSystem": "Kelola sistem"
+  },
+
+  "auth": {
+    "login": {
+      "title": "Selamat datang kembali",
+      "subtitle": "Masukkan kredensial Anda untuk mengakses akun",
+      "email": "Alamat Email",
+      "emailPlaceholder": "email@contoh.com",
+      "password": "Kata Sandi",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Lupa kata sandi?",
+      "submit": "Masuk",
+      "signingIn": "Sedang masuk...",
+      "noAccount": "Belum punya akun?",
+      "createAccount": "Buat akun",
+      "continueWithGoogle": "Lanjutkan dengan Google",
+      "orContinueWith": "atau lanjutkan dengan email",
+      "termsText": "Dengan masuk, Anda menyetujui",
+      "termsOfService": "Syarat Layanan",
+      "privacyPolicy": "Kebijakan Privasi",
+      "and": "dan",
+      "errors": {
+        "invalidCredentials": "Email atau kata sandi salah",
+        "emailNotVerified": "Silakan verifikasi email Anda terlebih dahulu",
+        "accountLocked": "Akun terkunci. Coba lagi nanti.",
+        "tooManyAttempts": "Terlalu banyak percobaan. Silakan coba lagi nanti."
+      }
+    },
+    "register": {
+      "title": "Buat akun",
+      "subtitle": "Daftar untuk mulai memesan tiket speedboat",
+      "name": "Nama Lengkap",
+      "namePlaceholder": "John Doe",
+      "email": "Alamat Email",
+      "emailPlaceholder": "email@contoh.com",
+      "password": "Kata Sandi",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Konfirmasi Kata Sandi",
+      "confirmPasswordPlaceholder": "••••••••",
+      "passwordRequirements": "Minimal 8 karakter dengan huruf besar, huruf kecil, dan angka",
+      "submit": "Buat akun",
+      "creating": "Membuat akun...",
+      "hasAccount": "Sudah punya akun?",
+      "signIn": "Masuk",
+      "termsNotice": "Dengan membuat akun, Anda menyetujui",
+      "termsOfService": "Syarat Layanan",
+      "privacyPolicy": "Kebijakan Privasi",
+      "goToLogin": "Ke Halaman Masuk",
+      "registerAnother": "Daftar akun lain",
+      "passwordStrength": {
+        "minLength": "8+ karakter",
+        "uppercase": "Huruf besar",
+        "lowercase": "Huruf kecil",
+        "number": "Angka"
+      },
+      "success": {
+        "title": "Periksa email Anda",
+        "message": "Kami telah mengirim tautan verifikasi ke:",
+        "instructions": "Klik tautan di email untuk memverifikasi akun Anda dan mulai memesan tiket. Tautan akan kadaluarsa dalam 24 jam.",
+        "noEmail": "Tidak menerima email? Periksa folder spam atau",
+        "tryAgain": "coba lagi"
+      }
+    },
+    "verifyEmail": {
+      "title": "Verifikasi Email Anda",
+      "verifying": "Memverifikasi email Anda...",
+      "pleaseWait": "Mohon tunggu sementara kami memverifikasi alamat email Anda.",
+      "success": "Email Terverifikasi!",
+      "successMessage": "Akun Anda sekarang aktif. Anda dapat masuk dan mulai memesan tiket!",
+      "failed": "Verifikasi Gagal",
+      "expired": "Tautan Kadaluarsa",
+      "expiredMessage": "Tautan verifikasi ini telah kadaluarsa.",
+      "invalidLink": "Tautan verifikasi tidak valid. Silakan minta yang baru.",
+      "resend": "Kirim Ulang",
+      "goToLogin": "Ke Halaman Masuk",
+      "backToHome": "Kembali ke Beranda",
+      "needNewLink": "Butuh tautan verifikasi baru?",
+      "didntReceive": "Tidak menerima email?",
+      "enterEmail": "Masukkan email Anda",
+      "resendSuccess": "Jika akun dengan email ini ada dan belum diverifikasi, Anda akan menerima tautan verifikasi baru.",
+      "checkInbox": "Periksa kotak masuk Anda untuk tautan verifikasi yang kami kirim. Klik tautan untuk memverifikasi alamat email Anda."
+    },
+    "forgotPassword": {
+      "title": "Lupa kata sandi?",
+      "subtitle": "Tenang, kami akan mengirim instruksi reset.",
+      "email": "Alamat Email",
+      "emailPlaceholder": "email@contoh.com",
+      "submit": "Kirim Tautan Reset",
+      "sending": "Mengirim...",
+      "backToLogin": "Kembali ke Login",
+      "tryAnother": "Coba email lain",
+      "success": {
+        "title": "Periksa email Anda",
+        "message": "Jika akun dengan email ini ada",
+        "instructions": "kami telah mengirim tautan reset kata sandi. Tautan akan kadaluarsa dalam 1 jam."
+      }
+    },
+    "resetPassword": {
+      "title": "Reset Kata Sandi",
+      "subtitle": "Masukkan kata sandi baru Anda di bawah.",
+      "newPassword": "Kata Sandi Baru",
+      "confirmPassword": "Konfirmasi Kata Sandi Baru",
+      "submit": "Reset Kata Sandi",
+      "resetting": "Mereset...",
+      "backToLogin": "Kembali ke Login",
+      "passwordStrength": {
+        "minLength": "Minimal 8 karakter",
+        "uppercase": "Satu huruf besar",
+        "lowercase": "Satu huruf kecil",
+        "number": "Satu angka"
+      },
+      "success": {
+        "title": "Kata Sandi Direset!",
+        "message": "Kata sandi Anda telah berhasil direset. Anda sekarang dapat masuk dengan kata sandi baru.",
+        "signIn": "Masuk"
+      },
+      "invalidLink": {
+        "title": "Tautan Reset Tidak Valid",
+        "message": "Tautan reset kata sandi ini tidak valid atau telah kadaluarsa. Silakan minta yang baru.",
+        "requestNew": "Minta Tautan Reset Baru",
+        "backToLogin": "Kembali ke Login"
+      },
+      "loading": "Memuat..."
+    },
+    "resendVerification": {
+      "button": "Kirim ulang email verifikasi",
+      "sending": "Mengirim...",
+      "success": "Email verifikasi terkirim! Periksa kotak masuk Anda."
+    }
+  },
+
+  "home": {
+    "hero": {
+      "badge": "Perjalanan Laut Cepat & Andal",
+      "title": "Jelajahi Antar Pulau",
+      "subtitle": "Cepat & Nyaman",
+      "description": "Pesan tiket speedboat dengan mudah dan nikmati perjalanan laut yang lancar melintasi kepulauan Indonesia yang indah.",
+      "searchPlaceholder": "Mau ke mana?"
+    },
+    "stats": {
+      "travelers": "Traveler Bahagia",
+      "routes": "Rute Tersedia",
+      "rating": "Rating Pengguna",
+      "onTime": "Tingkat Tepat Waktu"
+    },
+    "routes": {
+      "badge": "Destinasi Populer",
+      "title": "Jelajahi",
+      "titleHighlight": "Rute Populer",
+      "subtitle": "Temukan rute laut yang paling banyak dilalui di nusantara",
+      "from": "DARI",
+      "to": "KE",
+      "startingFrom": "Mulai dari",
+      "viewAll": "Lihat Semua Rute"
+    },
+    "features": {
+      "badge": "Mengapa Pilih Kami",
+      "title": "Rasakan",
+      "titleHighlight": "Yang Terbaik",
+      "subtitle": "Rasakan yang terbaik dalam pemesanan perjalanan laut dengan fitur premium kami",
+      "fast": {
+        "title": "Pemesanan Cepat",
+        "description": "Pesan tiket speedboat dalam hitungan menit dengan platform yang mudah digunakan."
+      },
+      "secure": {
+        "title": "Pembayaran Aman",
+        "description": "Pembayaran aman dan terjamin dengan berbagai opsi pembayaran tersedia."
+      },
+      "eticket": {
+        "title": "E-Tiket Instan",
+        "description": "Terima e-tiket Anda secara instan setelah konfirmasi pembayaran."
+      },
+      "routes": {
+        "title": "Banyak Rute",
+        "description": "Jangkauan luas rute laut di seluruh kepulauan Indonesia."
+      }
+    },
+    "cta": {
+      "badge": "Mulai Perjalanan Anda",
+      "title": "Siap untuk",
+      "titleHighlight": "Berlayar?",
+      "description": "Mulai perjalanan Anda hari ini. Pesan tiket speedboat sekarang dan rasakan cara tercepat untuk bepergian antar pulau.",
+      "badges": {
+        "confirmation": "Konfirmasi Instan",
+        "secure": "Pembayaran Aman",
+        "support": "Dukungan 24/7"
+      },
+      "searchButton": "Cari Jadwal",
+      "learnMore": "Pelajari Lebih"
+    },
+    "search": {
+      "from": "Dari",
+      "to": "Ke",
+      "date": "Tanggal",
+      "passengers": "Penumpang",
+      "passenger": "Penumpang",
+      "searchButton": "Cari Jadwal",
+      "selectPort": "Pilih pelabuhan"
+    },
+    "popularRoutes": {
+      "title": "Rute Populer",
+      "subtitle": "Destinasi paling banyak dipesan",
+      "viewAll": "Lihat Semua Rute"
+    }
+  },
+
+  "search": {
+    "title": "Cari Jadwal",
+    "subtitle": "Jadwal tersedia untuk perjalanan Anda",
+    "backToHome": "Kembali ke Beranda",
+    "empty": {
+      "title": "Cari Jadwal",
+      "description": "Gunakan form pencarian di atas untuk menemukan jadwal speedboat yang tersedia."
+    },
+    "filters": {
+      "title": "Filter",
+      "time": "Waktu Keberangkatan",
+      "price": "Rentang Harga",
+      "ship": "Kapal",
+      "morning": "Pagi (06:00 - 12:00)",
+      "afternoon": "Siang (12:00 - 18:00)",
+      "evening": "Malam (18:00 - 24:00)"
+    },
+    "sort": {
+      "label": "Urutkan",
+      "priceAsc": "Harga: Terendah",
+      "priceDesc": "Harga: Tertinggi",
+      "timeAsc": "Keberangkatan: Paling Awal",
+      "timeDesc": "Keberangkatan: Paling Akhir"
+    },
+    "results": {
+      "found": "Ditemukan {count} jadwal untuk",
+      "passengers": "{count} penumpang",
+      "noResults": "Jadwal Tidak Ditemukan",
+      "noResultsDescription": "Tidak ada jadwal tersedia untuk rute dan tanggal yang dipilih.",
+      "tryAlternatives": "Coba tanggal alternatif ini:",
+      "tryAnother": "Coba pilih tanggal atau rute lain"
+    },
+    "schedule": {
+      "departure": "Berangkat",
+      "arrival": "Tiba",
+      "duration": "Durasi",
+      "ship": "Kapal",
+      "seatsLeft": "{count} kursi tersisa",
+      "pricePerPerson": "Harga per orang",
+      "bookNow": "Pesan Sekarang",
+      "soldOut": "Habis"
+    }
+  },
+
+  "booking": {
+    "title": "Lengkapi Pemesanan Anda",
+    "steps": {
+      "passengers": "Data Penumpang",
+      "review": "Tinjauan",
+      "payment": "Pembayaran"
+    },
+    "schedule": {
+      "title": "Detail Perjalanan",
+      "route": "Rute",
+      "date": "Tanggal",
+      "time": "Waktu",
+      "ship": "Kapal",
+      "duration": "Durasi"
+    },
+    "passenger": {
+      "title": "Penumpang {number}",
+      "name": "Nama Lengkap (sesuai identitas)",
+      "namePlaceholder": "Masukkan nama lengkap",
+      "idType": "Jenis Identitas",
+      "idNumber": "Nomor Identitas",
+      "idNumberPlaceholder": "Masukkan nomor identitas",
+      "phone": "Nomor Telepon",
+      "phonePlaceholder": "Masukkan nomor telepon",
+      "idTypes": {
+        "ktp": "KTP",
+        "passport": "Paspor",
+        "sim": "SIM"
+      }
+    },
+    "summary": {
+      "title": "Ringkasan Pemesanan",
+      "passengers": "Penumpang",
+      "pricePerPerson": "Harga per orang",
+      "totalPassengers": "Total penumpang",
+      "subtotal": "Subtotal",
+      "serviceFee": "Biaya layanan",
+      "total": "Total",
+      "continueToPayment": "Lanjut ke Pembayaran"
+    },
+    "payment": {
+      "title": "Pembayaran",
+      "subtitle": "Selesaikan pembayaran untuk mengonfirmasi pemesanan",
+      "method": "Metode Pembayaran",
+      "methods": {
+        "bankTransfer": "Transfer Bank",
+        "eWallet": "E-Wallet",
+        "creditCard": "Kartu Kredit",
+        "qris": "QRIS"
+      },
+      "timer": "Selesaikan pembayaran dalam",
+      "expired": "Waktu pembayaran habis",
+      "payNow": "Bayar Sekarang",
+      "instructions": "Instruksi Pembayaran"
+    },
+    "success": {
+      "title": "Pemesanan Dikonfirmasi!",
+      "message": "Pemesanan Anda telah dikonfirmasi. Periksa email untuk e-tiket.",
+      "bookingCode": "Kode Pemesanan",
+      "viewTicket": "Lihat E-Tiket",
+      "bookAnother": "Pesan Perjalanan Lain"
+    },
+    "errors": {
+      "noSeats": "Maaf, tidak ada kursi tersedia untuk jadwal ini",
+      "paymentFailed": "Pembayaran gagal. Silakan coba lagi.",
+      "sessionExpired": "Sesi habis. Silakan mulai ulang."
+    }
+  },
+
+  "ticket": {
+    "title": "E-Tiket",
+    "boardingPass": "Boarding Pass",
+    "passenger": "Penumpang",
+    "from": "Dari",
+    "to": "Ke",
+    "date": "Tanggal",
+    "time": "Waktu",
+    "ship": "Kapal",
+    "seat": "Kursi",
+    "bookingCode": "Kode Pemesanan",
+    "ticketCode": "Kode Tiket",
+    "status": {
+      "valid": "Valid",
+      "used": "Terpakai",
+      "cancelled": "Dibatalkan"
+    },
+    "qrInstruction": "Tunjukkan kode QR ini kepada petugas saat boarding",
+    "download": "Unduh PDF",
+    "share": "Bagikan"
+  },
+
+  "dashboard": {
+    "user": {
+      "title": "Dasbor Saya",
+      "welcome": "Selamat datang kembali, {name}!",
+      "stats": {
+        "totalBookings": "Total Pemesanan",
+        "upcomingTrips": "Perjalanan Mendatang",
+        "completedTrips": "Perjalanan Selesai"
+      },
+      "upcomingBookings": "Pemesanan Mendatang",
+      "noUpcoming": "Tidak ada pemesanan mendatang",
+      "bookNow": "Pesan Perjalanan",
+      "recentBookings": "Pemesanan Terbaru",
+      "viewAll": "Lihat Semua"
+    },
+    "admin": {
+      "title": "Dasbor Admin",
+      "stats": {
+        "totalBookings": "Total Pemesanan",
+        "todayBookings": "Pemesanan Hari Ini",
+        "revenue": "Pendapatan (Bulan Ini)",
+        "activeSchedules": "Jadwal Aktif"
+      },
+      "quickActions": "Aksi Cepat",
+      "recentBookings": "Pemesanan Terbaru"
+    },
+    "menu": {
+      "overview": "Ringkasan",
+      "bookings": "Pemesanan",
+      "ships": "Kapal",
+      "ports": "Pelabuhan",
+      "routes": "Rute",
+      "schedules": "Jadwal",
+      "users": "Pengguna",
+      "reports": "Laporan",
+      "settings": "Pengaturan",
+      "validate": "Check-in",
+      "manifest": "Daftar Penumpang",
+      "payments": "Pembayaran",
+      "switchView": "Ganti Tampilan",
+      "userView": "Tampilan User",
+      "operatorView": "Tampilan Operator",
+      "adminView": "Tampilan Admin",
+      "myAccount": "Akun Saya",
+      "backToHome": "Kembali ke Beranda"
+    }
+  },
+
+  "profile": {
+    "title": "Profil Saya",
+    "personalInfo": "Informasi Pribadi",
+    "name": "Nama Lengkap",
+    "email": "Email",
+    "phone": "Nomor Telepon",
+    "changePassword": "Ubah Kata Sandi",
+    "currentPassword": "Kata Sandi Saat Ini",
+    "newPassword": "Kata Sandi Baru",
+    "confirmNewPassword": "Konfirmasi Kata Sandi Baru",
+    "saveChanges": "Simpan Perubahan",
+    "success": "Profil berhasil diperbarui"
+  },
+
+  "validation": {
+    "required": "Bidang ini wajib diisi",
+    "email": "Masukkan alamat email yang valid",
+    "minLength": "Minimal {min} karakter",
+    "maxLength": "Maksimal {max} karakter",
+    "passwordMismatch": "Kata sandi tidak cocok",
+    "passwordWeak": "Kata sandi harus mengandung huruf besar, huruf kecil, dan angka",
+    "invalidPhone": "Masukkan nomor telepon yang valid",
+    "invalidIdNumber": "Masukkan nomor identitas yang valid"
+  },
+
+  "errors": {
+    "general": "Terjadi kesalahan. Silakan coba lagi.",
+    "notFound": "Halaman tidak ditemukan",
+    "notFoundMessage": "Halaman yang Anda cari tidak ada.",
+    "unauthorized": "Tidak Diizinkan",
+    "unauthorizedMessage": "Anda perlu masuk untuk mengakses halaman ini.",
+    "forbidden": "Akses Ditolak",
+    "forbiddenMessage": "Anda tidak memiliki izin untuk mengakses halaman ini.",
+    "serverError": "Kesalahan Server",
+    "serverErrorMessage": "Terjadi kesalahan di server kami. Silakan coba lagi nanti.",
+    "networkError": "Kesalahan Jaringan",
+    "networkErrorMessage": "Periksa koneksi internet Anda.",
+    "goHome": "Ke Beranda",
+    "goBack": "Kembali",
+    "tryAgain": "Coba Lagi",
+    "oauthSignin": "Terjadi kesalahan saat memulai proses masuk. Silakan coba lagi.",
+    "oauthCallback": "Terjadi kesalahan selama proses masuk. Silakan coba lagi.",
+    "oauthAccountNotLinked": "Email ini sudah terhubung dengan akun lain.",
+    "accessDenied": "Akses ditolak. Anda mungkin tidak memiliki izin untuk masuk.",
+    "configuration": "Kesalahan konfigurasi server. Silakan hubungi dukungan.",
+    "credentialsSignin": "Email atau kata sandi salah. Silakan coba lagi."
+  },
+
+  "footer": {
+    "brand": {
+      "name": "SpeedBoat",
+      "tagline": "Pemesanan Tiket",
+      "description": "Mitra terpercaya Anda untuk perjalanan laut yang cepat, nyaman, dan andal di seluruh kepulauan Indonesia. Pesan perjalanan Anda hari ini!"
+    },
+    "newsletter": {
+      "title": "Berlangganan newsletter kami",
+      "description": "Dapatkan penawaran eksklusif, tips perjalanan, dan info terbaru langsung ke inbox Anda",
+      "placeholder": "Masukkan email Anda",
+      "subscribe": "Berlangganan"
+    },
+    "sections": {
+      "explore": "Jelajahi",
+      "company": "Perusahaan",
+      "support": "Dukungan",
+      "legal": "Legal"
+    },
+    "links": {
+      "explore": {
+        "popularRoutes": "Rute Populer",
+        "destinations": "Destinasi",
+        "travelDeals": "Promo Perjalanan",
+        "schedule": "Jadwal"
+      },
+      "company": {
+        "about": "Tentang Kami",
+        "careers": "Karir",
+        "press": "Pers & Media",
+        "partners": "Mitra"
+      },
+      "support": {
+        "helpCenter": "Pusat Bantuan",
+        "faqs": "FAQ",
+        "contact": "Hubungi Kami",
+        "refund": "Kebijakan Refund"
+      },
+      "legal": {
+        "terms": "Syarat Layanan",
+        "privacy": "Kebijakan Privasi",
+        "cookies": "Kebijakan Cookie",
+        "licenses": "Lisensi"
+      }
+    },
+    "copyright": "Hak cipta dilindungi.",
+    "madeWith": "Dibuat dengan",
+    "inIndonesia": "di Indonesia"
+  },
+
+  "time": {
+    "hours": "jam",
+    "minutes": "menit",
+    "seconds": "detik",
+    "hour": "jam",
+    "minute": "menit",
+    "second": "detik"
+  },
+
+  "currency": {
+    "code": "IDR",
+    "symbol": "Rp"
+  },
+
+  "destinations": {
+    "hero": {
+      "badge": "Jelajahi Destinasi",
+      "title": "Temukan Destinasi Menakjubkan",
+      "subtitle": "Jelajahi jaringan pelabuhan kami yang luas dan temukan petualangan laut Anda berikutnya"
+    },
+    "search": {
+      "placeholder": "Cari destinasi berdasarkan nama, kota, atau provinsi..."
+    },
+    "loading": "Memuat destinasi...",
+    "empty": {
+      "title": "Tidak ada destinasi ditemukan",
+      "description": "Coba sesuaikan pencarian Anda atau periksa kembali nanti untuk destinasi baru."
+    },
+    "results": {
+      "title": "Semua Destinasi",
+      "count": "{count} destinasi tersedia"
+    },
+    "card": {
+      "routes": "{count} rute",
+      "explore": "Jelajahi"
+    },
+    "cta": {
+      "title": "Siap berlayar?",
+      "description": "Cari perjalanan yang tersedia dan pesan tiket Anda sekarang. Pemesanan cepat, aman, dan tanpa ribet.",
+      "button": "Cari Perjalanan"
+    }
+  }
+}
