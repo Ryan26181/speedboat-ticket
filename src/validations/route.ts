@@ -21,7 +21,7 @@ export const createRouteSchema = z
     distance: z
       .number()
       .positive("Distance must be a positive number")
-      .max(10000, "Distance seems too large"),
+      .max(100000, "Distance seems too large (max 100,000 km)"),
     estimatedDuration: z
       .number()
       .int("Duration must be a whole number")
@@ -46,7 +46,7 @@ export const updateRouteSchema = z.object({
   distance: z
     .number()
     .positive("Distance must be a positive number")
-    .max(10000, "Distance seems too large")
+    .max(100000, "Distance seems too large (max 100,000 km)")
     .optional(),
   estimatedDuration: z
     .number()

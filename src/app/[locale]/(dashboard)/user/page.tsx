@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { format } from "date-fns";
+import { id as idLocale } from "date-fns/locale";
 import {
   Ticket,
   Calendar,
@@ -133,21 +134,21 @@ export default function UserDashboardPage() {
   const greeting = currentHour < 12 ? "Good morning" : currentHour < 18 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Welcome Header with Gradient Background */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-500 to-primary-700 p-6 sm:p-8 text-white shadow-lg">
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-linear-to-br from-blue-600 via-blue-500 to-blue-700 p-4 sm:p-6 lg:p-8 text-white shadow-lg">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOGMxLjI1NCAwIDIuNDc4LS4xMjggMy42Ni0uMzcyIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9nPjwvc3ZnPg==')] opacity-30"></div>
         <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-2">
-            <p className="text-primary-100 text-sm font-medium">{greeting}</p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome back, {userName}! 👋</h1>
-            <p className="text-primary-100 max-w-md">
+          <div className="space-y-1 sm:space-y-2">
+            <p className="text-blue-100 text-xs sm:text-sm font-medium">{greeting}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Welcome back, {userName}! 👋</h1>
+            <p className="text-blue-100 text-sm sm:text-base max-w-md hidden sm:block">
               Here&apos;s an overview of your travel activity. Plan your next adventure today.
             </p>
           </div>
-          <Button asChild size="lg" className="bg-white text-primary-600 hover:bg-primary-50 shadow-md hover:shadow-lg transition-all duration-200">
+          <Button asChild size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 shadow-md hover:shadow-lg transition-all duration-200 h-11 sm:h-12">
             <Link href="/" className="inline-flex items-center gap-2">
-              <Plus className="h-5 w-5" />
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
               Book New Trip
             </Link>
           </Button>
@@ -163,90 +164,90 @@ export default function UserDashboardPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary-500/20 to-primary-600/10 rounded-bl-full"></div>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+        <Card className="relative overflow-hidden border-0 bg-linear-to-br from-slate-50 to-slate-100 shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-linear-to-br from-blue-500/20 to-blue-600/10 rounded-bl-full"></div>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-4">
+            <CardTitle className="text-[10px] sm:text-xs lg:text-sm font-medium text-muted-foreground">
               Total Bookings
             </CardTitle>
-            <div className="p-2 rounded-lg bg-primary-500/10">
-              <Ticket className="h-4 w-4 text-primary-600" />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10">
+              <Ticket className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 pt-0">
             {isLoading ? (
-              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
             ) : (
-              <div className="space-y-1">
-                <p className="text-3xl font-bold tracking-tight">{stats?.totalBookings || 0}</p>
-                <p className="text-xs text-muted-foreground">All time bookings</p>
+              <div className="space-y-0.5 sm:space-y-1">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">{stats?.totalBookings || 0}</p>
+                <p className="text-[9px] sm:text-xs text-muted-foreground hidden sm:block">All time bookings</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-bl-full"></div>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">
+        <Card className="relative overflow-hidden border-0 bg-linear-to-br from-blue-50 to-blue-100 shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-linear-to-br from-blue-500/20 to-blue-600/10 rounded-bl-full"></div>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-4">
+            <CardTitle className="text-[10px] sm:text-xs lg:text-sm font-medium text-blue-700">
               Upcoming Trips
             </CardTitle>
-            <div className="p-2 rounded-lg bg-blue-500/10">
-              <Calendar className="h-4 w-4 text-blue-600" />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 pt-0">
             {isLoading ? (
-              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
             ) : (
-              <div className="space-y-1">
-                <p className="text-3xl font-bold tracking-tight text-blue-700 dark:text-blue-300">{stats?.upcomingTrips || 0}</p>
-                <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Ready to travel</p>
+              <div className="space-y-0.5 sm:space-y-1">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-blue-700">{stats?.upcomingTrips || 0}</p>
+                <p className="text-[9px] sm:text-xs text-blue-600/70 hidden sm:block">Ready to travel</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-bl-full"></div>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+        <Card className="relative overflow-hidden border-0 bg-linear-to-br from-emerald-50 to-emerald-100 shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-linear-to-br from-emerald-500/20 to-emerald-600/10 rounded-bl-full"></div>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-4">
+            <CardTitle className="text-[10px] sm:text-xs lg:text-sm font-medium text-emerald-700">
               Completed Trips
             </CardTitle>
-            <div className="p-2 rounded-lg bg-emerald-500/10">
-              <CheckCircle className="h-4 w-4 text-emerald-600" />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-500/10">
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-600" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 pt-0">
             {isLoading ? (
-              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
             ) : (
-              <div className="space-y-1">
-                <p className="text-3xl font-bold tracking-tight text-emerald-700 dark:text-emerald-300">{stats?.completedTrips || 0}</p>
-                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Journeys completed</p>
+              <div className="space-y-0.5 sm:space-y-1">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-emerald-700">{stats?.completedTrips || 0}</p>
+                <p className="text-[9px] sm:text-xs text-emerald-600/70 hidden sm:block">Journeys completed</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 shadow-md hover:shadow-lg transition-all duration-300">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-500/20 to-amber-600/10 rounded-bl-full"></div>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-amber-700 dark:text-amber-300">
+        <Card className="relative overflow-hidden border-0 bg-linear-to-br from-amber-50 to-amber-100 shadow-md hover:shadow-lg transition-all duration-300">
+          <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-linear-to-br from-amber-500/20 to-amber-600/10 rounded-bl-full"></div>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 p-3 sm:p-4">
+            <CardTitle className="text-[10px] sm:text-xs lg:text-sm font-medium text-amber-700">
               Pending Payments
             </CardTitle>
-            <div className="p-2 rounded-lg bg-amber-500/10">
-              <Clock className="h-4 w-4 text-amber-600" />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-amber-500/10">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 pt-0">
             {isLoading ? (
-              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
             ) : (
-              <div className="space-y-1">
-                <p className="text-3xl font-bold tracking-tight text-amber-700 dark:text-amber-300">{stats?.pendingPayments || 0}</p>
-                <p className="text-xs text-amber-600/70 dark:text-amber-400/70">Awaiting payment</p>
+              <div className="space-y-0.5 sm:space-y-1">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-amber-700">{stats?.pendingPayments || 0}</p>
+                <p className="text-[9px] sm:text-xs text-amber-600/70 hidden sm:block">Awaiting payment</p>
               </div>
             )}
           </CardContent>
@@ -254,23 +255,24 @@ export default function UserDashboardPage() {
       </div>
 
       {/* Upcoming Bookings */}
-      <Card className="border-0 shadow-lg bg-white dark:bg-slate-900">
-        <CardHeader className="flex flex-row items-center justify-between border-b bg-gradient-to-r from-slate-50 to-transparent dark:from-slate-800 dark:to-transparent">
-          <div className="space-y-1">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Ship className="h-5 w-5 text-primary-500" />
+      <Card className="border-0 shadow-lg bg-white">
+        <CardHeader className="flex flex-row items-center justify-between border-b bg-linear-to-r from-slate-50 to-transparent px-4 sm:px-6 py-3 sm:py-4">
+          <div className="space-y-0.5 sm:space-y-1">
+            <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center gap-2">
+              <Ship className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
               Upcoming Trips
             </CardTitle>
-            <CardDescription>Your next scheduled journeys</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">Your next scheduled journeys</CardDescription>
           </div>
-          <Button variant="outline" size="sm" asChild className="gap-2 hover:bg-primary-50 hover:text-primary-600 hover:border-primary-300 transition-colors">
+          <Button variant="outline" size="sm" asChild className="gap-1 sm:gap-2 text-xs sm:text-sm hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors h-8 sm:h-9">
             <Link href="/user/bookings">
-              View All
-              <ArrowRight className="h-4 w-4" />
+              <span className="hidden sm:inline">View All</span>
+              <span className="sm:hidden">All</span>
+              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Link>
           </Button>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -285,18 +287,18 @@ export default function UserDashboardPage() {
               ))}
             </div>
           ) : upcomingBookings.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="relative mx-auto w-24 h-24 mb-6">
-                <div className="absolute inset-0 bg-primary-100 dark:bg-primary-900/30 rounded-full animate-pulse"></div>
-                <div className="absolute inset-2 bg-primary-50 dark:bg-primary-900/50 rounded-full flex items-center justify-center">
-                  <Ship className="h-10 w-10 text-primary-500" />
+            <div className="text-center py-8 sm:py-12 lg:py-16">
+              <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mb-4 sm:mb-6">
+                <div className="absolute inset-0 bg-blue-100 rounded-full animate-pulse"></div>
+                <div className="absolute inset-2 bg-blue-50 rounded-full flex items-center justify-center">
+                  <Ship className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-blue-500" />
                 </div>
               </div>
-              <h3 className="font-semibold text-lg mb-2">No upcoming trips</h3>
-              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+              <h3 className="font-semibold text-base sm:text-lg mb-1 sm:mb-2">No upcoming trips</h3>
+              <p className="text-sm text-muted-foreground mb-4 sm:mb-6 max-w-xs sm:max-w-sm mx-auto">
                 Your next adventure awaits! Browse our routes and book your journey today.
               </p>
-              <Button asChild size="lg" className="gap-2">
+              <Button asChild size="default" className="gap-2 h-10 sm:h-11">
                 <Link href="/">
                   <Search className="h-4 w-4" />
                   Search Routes
@@ -313,10 +315,10 @@ export default function UserDashboardPage() {
                   <Link
                     key={booking.id}
                     href={`/user/bookings/${booking.id}`}
-                    className="group flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-primary-300 hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-transparent dark:hover:from-primary-950/30 dark:hover:to-transparent transition-all duration-300 hover:shadow-md"
+                    className="group flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-slate-200 rounded-xl hover:border-blue-300 hover:bg-linear-to-r hover:from-blue-50/50 hover:to-transparent transition-all duration-300 hover:shadow-md"
                   >
                     {/* Date Box */}
-                    <div className="flex sm:flex-col items-center sm:items-center gap-2 sm:gap-0 text-center bg-gradient-to-br from-primary-500 to-primary-600 p-4 rounded-xl sm:min-w-[4.5rem] shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
+                    <div className="flex sm:flex-col items-center sm:items-center gap-2 sm:gap-0 text-center bg-linear-to-br from-blue-500 to-blue-600 p-4 rounded-xl sm:min-w-18 shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
                       <span className="text-xs text-primary-100 font-semibold uppercase tracking-wider">
                         {format(departureTime, "MMM")}
                       </span>
@@ -370,8 +372,8 @@ export default function UserDashboardPage() {
                     </div>
 
                     {/* Amount & Action */}
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 sm:min-w-[120px] sm:border-l sm:pl-4 border-slate-200 dark:border-slate-700">
-                      <p className="text-lg font-bold text-primary-600 dark:text-primary-400">{formatPrice(booking.totalAmount)}</p>
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 sm:min-w-30 sm:border-l sm:pl-4 border-slate-200">
+                      <p className="text-lg font-bold text-blue-600">{formatPrice(booking.totalAmount)}</p>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Users className="h-3 w-3" />
                         {booking.totalPassengers} passenger{booking.totalPassengers > 1 ? "s" : ""}
@@ -394,11 +396,11 @@ export default function UserDashboardPage() {
         </h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <Card className="group relative overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-primary-600/10 group-hover:from-primary-500/10 group-hover:to-primary-600/20 transition-all duration-300"></div>
+            <div className="absolute inset-0 bg-linear-to-br from-blue-500/5 to-blue-600/10 group-hover:from-blue-500/10 group-hover:to-blue-600/20 transition-all duration-300"></div>
             <Link href="/" className="relative block p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30 group-hover:scale-110 transition-transform duration-300">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
                     <Ship className="h-6 w-6 text-white" />
                   </div>
                   <div>
@@ -406,17 +408,17 @@ export default function UserDashboardPage() {
                     <p className="text-sm text-muted-foreground">Search available routes</p>
                   </div>
                 </div>
-                <ArrowRight className="h-5 w-5 text-primary-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                <ArrowRight className="h-5 w-5 text-blue-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
               </div>
             </Link>
           </Card>
 
           <Card className="group relative overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/10 group-hover:from-blue-500/10 group-hover:to-blue-600/20 transition-all duration-300"></div>
+            <div className="absolute inset-0 bg-linear-to-br from-blue-500/5 to-blue-600/10 group-hover:from-blue-500/10 group-hover:to-blue-600/20 transition-all duration-300"></div>
             <Link href="/user/bookings" className="relative block p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
                     <Ticket className="h-6 w-6 text-white" />
                   </div>
                   <div>
@@ -430,11 +432,11 @@ export default function UserDashboardPage() {
           </Card>
 
           <Card className="group relative overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-emerald-600/10 group-hover:from-emerald-500/10 group-hover:to-emerald-600/20 transition-all duration-300"></div>
+            <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 to-emerald-600/10 group-hover:from-emerald-500/10 group-hover:to-emerald-600/20 transition-all duration-300"></div>
             <Link href="/user/profile" className="relative block p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
                     <CheckCircle className="h-6 w-6 text-white" />
                   </div>
                   <div>

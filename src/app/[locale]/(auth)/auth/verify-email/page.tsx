@@ -1,278 +1,183 @@
-"use client";
+'use client';
 
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { Link } from "@/i18n/routing";
-import { CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+
+type Status = 'loading' | 'success' | 'error' | 'expired';
 
 function VerifyEmailContent() {
-  const t = useTranslations('auth.verifyEmail');
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
-  const success = searchParams.get("success");
-  const errorParam = searchParams.get("error");
+  const t = useTranslations('auth.verifyEmail');
   
-  const [status, setStatus] = useState<"loading" | "success" | "error" | "idle">("idle");
-  const [message, setMessage] = useState<string>("");
+  const token = searchParams.get('token');
+  const success = searchParams.get('success');
+  const errorParam = searchParams.get('error');
+  const emailParam = searchParams.get('email');
+
+  const [status, setStatus] = useState<Status>('loading');
+  const [message, setMessage] = useState('');
   const [isResending, setIsResending] = useState(false);
-  const [resendEmail, setResendEmail] = useState("");
-  const [resendSuccess, setResendSuccess] = useState(false);
 
   useEffect(() => {
     // Handle redirect from GET endpoint
-    if (success === "true") {
-      setStatus("success");
-      setMessage("Your email has been verified successfully!");
+    if (success === 'true') {
+      setStatus('success');
+      setMessage(t('successMessage'));
       return;
     }
 
     if (errorParam) {
-      setStatus("error");
-      if (errorParam === "missing_token") {
-        setMessage("No verification token provided.");
-      } else if (errorParam === "rate_limit") {
-        setMessage("Too many attempts. Please try again later.");
-      } else {
-        setMessage(decodeURIComponent(errorParam));
-      }
+      setStatus(errorParam.includes('expired') ? 'expired' : 'error');
+      setMessage(decodeURIComponent(errorParam));
       return;
     }
 
-    // If token is in URL but not processed by GET, verify via POST
-    if (token) {
-      verifyEmail(token);
+    if (!token) {
+      setStatus('error');
+      setMessage(t('invalidLink'));
+      return;
     }
-  }, [token, success, errorParam]);
 
-  const verifyEmail = async (verificationToken: string) => {
-    setStatus("loading");
-    
-    try {
-      const response = await fetch("/api/auth/verify-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: verificationToken }),
-      });
+    // Verify via POST
+    const verify = async () => {
+      try {
+        const res = await fetch('/api/auth/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json();
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        setStatus("error");
-        setMessage(result.error || "Verification failed");
-        return;
+        if (data.success) {
+          setStatus('success');
+          setMessage(t('successMessage'));
+        } else {
+          setStatus(data.error?.includes('expired') ? 'expired' : 'error');
+          setMessage(data.error || t('invalidLink'));
+        }
+      } catch {
+        setStatus('error');
+        setMessage('Something went wrong');
       }
+    };
 
-      setStatus("success");
-      setMessage("Your email has been verified successfully!");
-    } catch {
-      setStatus("error");
-      setMessage("An error occurred during verification.");
-    }
-  };
+    verify();
+  }, [token, success, errorParam, t]);
 
-  const handleResendVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resendEmail || isResending) return;
-
+  const handleResend = async () => {
+    if (!emailParam) return;
     setIsResending(true);
-    setResendSuccess(false);
-
     try {
-      const response = await fetch("/api/auth/resend-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resendEmail }),
+      const res = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailParam }),
       });
-
-      await response.json();
-      setResendSuccess(true);
+      const data = await res.json();
+      setMessage(data.success ? 'New verification email sent!' : data.error);
     } catch {
-      // Still show success to prevent enumeration
-      setResendSuccess(true);
+      setMessage('Failed to resend');
     } finally {
       setIsResending(false);
     }
   };
 
-  // Loading state
-  if (status === "loading") {
-    return (
-      <div className="bg-card rounded-3xl shadow-2xl border border-border/30 p-8 md:p-12 animate-scale-in backdrop-blur-sm">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 mb-6">
-            <Loader2 className="w-10 h-10 text-primary-600 dark:text-primary-400 animate-spin" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-4">{t('verifying')}</h1>
-          <p className="text-muted-foreground">{t('pleaseWait')}</p>
-        </div>
-      </div>
-    );
-  }
+  const statusConfig = {
+    loading: {
+      icon: <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 animate-spin" />,
+      bg: 'bg-gray-100',
+      title: t('verifying'),
+    },
+    success: {
+      icon: <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12 text-green-600" />,
+      bg: 'bg-green-100',
+      title: t('success'),
+    },
+    error: {
+      icon: <XCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-600" />,
+      bg: 'bg-red-100',
+      title: t('failed'),
+    },
+    expired: {
+      icon: <XCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-600" />,
+      bg: 'bg-red-100',
+      title: t('expired'),
+    },
+  };
 
-  // Success state
-  if (status === "success") {
-    return (
-      <div className="bg-card rounded-3xl shadow-2xl border border-border/30 p-8 md:p-12 animate-scale-in backdrop-blur-sm">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
-            <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-4">{t('success')}</h1>
-          <p className="text-muted-foreground mb-8">{t('successMessage')}</p>
-          
-          <Link
-            href="/login"
-            className="inline-block w-full py-3 px-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl text-center transition-all duration-300"
-          >
-            {t('goToLogin')}
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const config = statusConfig[status];
 
-  // Error state
-  if (status === "error") {
-    return (
-      <div className="bg-card rounded-3xl shadow-2xl border border-border/30 p-8 md:p-12 animate-scale-in backdrop-blur-sm">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
-            <XCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-4">{t('failed')}</h1>
-          <p className="text-muted-foreground mb-8">{message}</p>
-          
-          {/* Resend verification form */}
-          <div className="bg-muted/50 rounded-xl p-6 mb-6">
-            <h2 className="text-sm font-medium text-foreground mb-4">
-              {t('needNewLink')}
-            </h2>
-            
-            {resendSuccess ? (
-              <p className="text-sm text-green-600 dark:text-green-400">
-                {t('resendSuccess')}
-              </p>
-            ) : (
-              <form onSubmit={handleResendVerification} className="flex gap-2">
-                <input
-                  type="email"
-                  value={resendEmail}
-                  onChange={(e) => setResendEmail(e.target.value)}
-                  placeholder={t('enterEmail')}
-                  className="flex-1 px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  required
-                />
-                <button
-                  type="submit"
-                  disabled={isResending || !resendEmail}
-                  className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg disabled:opacity-50 transition-colors"
-                >
-                  {isResending ? <Loader2 className="w-5 h-5 animate-spin" /> : t('resend')}
-                </button>
-              </form>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <Link
-              href="/login"
-              className="block w-full py-3 px-4 border border-border rounded-xl text-foreground hover:bg-muted/50 font-medium transition-all text-center"
-            >
-              {t('goToLogin')}
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              <span>←</span>
-              <span>{t('backToHome')}</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Idle state - no token provided
   return (
-    <div className="bg-card rounded-3xl shadow-2xl border border-border/30 p-8 md:p-12 animate-scale-in backdrop-blur-sm">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 mb-6">
-          <Mail className="w-10 h-10 text-primary-600 dark:text-primary-400" />
+    <Card className="w-full max-w-100 shadow-xl border-0 mx-auto text-center">
+      <CardHeader className="space-y-4 pb-4 px-4 sm:px-6">
+        <div className="flex justify-center">
+          <div className={`w-20 h-20 sm:w-24 sm:h-24 ${config.bg} rounded-full flex items-center justify-center`}>
+            {config.icon}
+          </div>
         </div>
-        <h1 className="text-2xl font-bold text-foreground mb-4">{t('title')}</h1>
-        <p className="text-muted-foreground mb-8">
-          {t('checkInbox')}
-        </p>
+        <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900">
+          {config.title}
+        </CardTitle>
+      </CardHeader>
 
-        {/* Resend verification form */}
-        <div className="bg-muted/50 rounded-xl p-6 mb-6">
-          <h2 className="text-sm font-medium text-foreground mb-4">
-            {t('didntReceive')}
-          </h2>
-          
-          {resendSuccess ? (
-            <p className="text-sm text-green-600 dark:text-green-400">
-              {t('resendSuccess')}
-            </p>
-          ) : (
-            <form onSubmit={handleResendVerification} className="flex gap-2">
-              <input
-                type="email"
-                value={resendEmail}
-                onChange={(e) => setResendEmail(e.target.value)}
-                placeholder={t('enterEmail')}
-                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary-500"
-                required
-              />
-              <button
-                type="submit"
-                disabled={isResending || !resendEmail}
-                className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg disabled:opacity-50 transition-colors"
-              >
-                {isResending ? <Loader2 className="w-5 h-5 animate-spin" /> : t('resend')}
-              </button>
-            </form>
-          )}
-        </div>
+      <CardContent className="px-4 sm:px-6">
+        <p className="text-sm sm:text-base text-gray-600">{message}</p>
 
-        <div className="space-y-3">
-          <Link
-            href="/login"
-            className="block w-full py-3 px-4 border border-border rounded-xl text-foreground hover:bg-muted/50 font-medium transition-all text-center"
+        {status === 'success' && (
+          <div className="mt-4 p-3 sm:p-4 bg-green-50 rounded-xl text-xs sm:text-sm text-green-800">
+            Your account is now active. You can sign in and start booking!
+          </div>
+        )}
+
+        {status === 'expired' && emailParam && (
+          <Button
+            onClick={handleResend}
+            disabled={isResending}
+            className="mt-4 w-full h-11 sm:h-12"
           >
-            {t('goToLogin')}
+            {isResending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            {t('resend')}
+          </Button>
+        )}
+      </CardContent>
+
+      <CardFooter className="justify-center border-t pt-4 sm:pt-6 px-4 sm:px-6">
+        {status !== 'loading' && (
+          <Link href="/login">
+            <Button variant={status === 'success' ? 'default' : 'outline'} className="h-10 sm:h-11">
+              {t('goToLogin')}
+            </Button>
           </Link>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            <span>←</span>
-            <span>{t('backToHome')}</span>
-          </Link>
-        </div>
-      </div>
-    </div>
+        )}
+      </CardFooter>
+    </Card>
   );
 }
 
-/**
- * Email Verification Page
- * 
- * Handles email verification tokens and displays status.
- */
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="bg-card rounded-3xl shadow-2xl border border-border/30 p-8 md:p-12 animate-scale-in backdrop-blur-sm">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-900/30 mb-6">
-            <Loader2 className="w-10 h-10 text-primary-600 dark:text-primary-400 animate-spin" />
+      <Card className="w-full max-w-100 shadow-xl border-0 mx-auto text-center">
+        <CardHeader className="space-y-4 pb-4 px-4 sm:px-6">
+          <div className="flex justify-center">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center">
+              <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 animate-spin" />
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-4">Loading...</h1>
-        </div>
-      </div>
+          <div className="text-xl sm:text-2xl font-bold text-gray-900">
+            Verifying...
+          </div>
+        </CardHeader>
+      </Card>
     }>
       <VerifyEmailContent />
     </Suspense>

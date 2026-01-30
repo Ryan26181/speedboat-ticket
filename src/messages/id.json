@@ -488,6 +488,7 @@
       "tagline": "Pemesanan Tiket",
       "description": "Mitra terpercaya Anda untuk perjalanan laut yang cepat, nyaman, dan andal di seluruh kepulauan Indonesia. Pesan perjalanan Anda hari ini!"
     },
+    "description": "Mitra terpercaya Anda untuk perjalanan laut yang cepat, nyaman, dan andal di seluruh kepulauan Indonesia.",
     "newsletter": {
       "title": "Berlangganan newsletter kami",
       "description": "Dapatkan penawaran eksklusif, tips perjalanan, dan info terbaru langsung ke inbox Anda",
@@ -500,6 +501,19 @@
       "support": "Dukungan",
       "legal": "Legal"
     },
+    "company": "Perusahaan",
+    "support": "Dukungan",
+    "legal": "Legal",
+    "contactTitle": "Kontak",
+    "about": "Tentang Kami",
+    "careers": "Karir",
+    "blog": "Blog",
+    "contact": "Hubungi Kami",
+    "faq": "FAQ",
+    "help": "Pusat Bantuan",
+    "terms": "Syarat Layanan",
+    "privacy": "Kebijakan Privasi",
+    "copyright": "© {year} {appName}. Hak cipta dilindungi.",
     "links": {
       "explore": {
         "popularRoutes": "Rute Populer",

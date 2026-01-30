@@ -34,7 +34,7 @@ interface TicketData {
   ticketCode: string;
   status: string;
   seatNumber: string | null;
-  qrCode: string;
+  qrDataURL: string;
   checkedInAt: string | null;
   passenger: {
     name: string;
@@ -98,12 +98,20 @@ export default function TicketPage({ params }: { params: Promise<{ bookingCode: 
         // First, find booking by code
         const searchRes = await fetch(`/api/bookings?bookingCode=${bookingCode}`);
         const searchData = await searchRes.json();
+        
+        console.log("=== TICKET PAGE DEBUG ===");
+        console.log("searchData:", searchData);
 
-        if (!searchRes.ok || !searchData.data?.length) {
+        // Handle nested paginated response
+        const bookingsArray = searchData.data?.data || searchData.data || [];
+        
+        if (!searchRes.ok || !bookingsArray.length) {
           throw new Error("Booking not found");
         }
 
-        const bookingId = searchData.data[0].id;
+        const bookingId = bookingsArray[0].id;
+        console.log("bookingId:", bookingId);
+        console.log("=== END DEBUG ===");
 
         // Fetch full booking details with tickets
         const [bookingRes, ticketsRes] = await Promise.all([
@@ -113,14 +121,21 @@ export default function TicketPage({ params }: { params: Promise<{ bookingCode: 
 
         const bookingData = await bookingRes.json();
         const ticketsData = await ticketsRes.json();
+        
+        console.log("bookingData:", bookingData);
+        console.log("ticketsData:", ticketsData);
 
         if (!bookingRes.ok) {
           throw new Error(bookingData.message || "Failed to load booking");
         }
 
+        // Handle nested response for tickets - API returns { success, data: { tickets: [...] } }
+        const ticketsArray = ticketsData.data?.tickets || ticketsData.data?.data || ticketsData.data || [];
+        console.log("ticketsArray:", ticketsArray);
+        
         setBooking({
           ...bookingData.data,
-          tickets: ticketsData.data || [],
+          tickets: Array.isArray(ticketsArray) ? ticketsArray : [],
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load tickets");
@@ -312,11 +327,11 @@ export default function TicketPage({ params }: { params: Promise<{ bookingCode: 
               )}
 
               {/* QR Code */}
-              {selectedTicket?.qrCode && (
+              {selectedTicket?.qrDataURL && (
                 <div className="flex justify-center mb-6">
                   <div className="p-4 bg-white rounded-lg border-2 border-dashed">
                     <Image
-                      src={selectedTicket.qrCode}
+                      src={selectedTicket.qrDataURL}
                       alt="Ticket QR Code"
                       width={180}
                       height={180}

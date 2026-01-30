@@ -1,18 +1,54 @@
 import crypto from "crypto";
+import midtransClient from "midtrans-client";
 
 /**
  * Midtrans API Configuration
- * Using direct API calls instead of SDK for better control
+ * Using both SDK and direct API calls for flexibility
  */
 
+// ============================================
+// CONFIGURATION
+// ============================================
+
+const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
+const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
+const clientKey = process.env.MIDTRANS_CLIENT_KEY || "";
+
+// Validate configuration
+if (!serverKey || !clientKey) {
+  console.warn("[MIDTRANS] Missing API keys. Payment features will not work.");
+}
+
 // Environment-based URLs
-const MIDTRANS_SNAP_URL = process.env.MIDTRANS_IS_PRODUCTION === "true"
+const MIDTRANS_SNAP_URL = isProduction
   ? "https://app.midtrans.com/snap/v1/transactions"
   : "https://app.sandbox.midtrans.com/snap/v1/transactions";
 
-const MIDTRANS_API_URL = process.env.MIDTRANS_IS_PRODUCTION === "true"
+const MIDTRANS_API_URL = isProduction
   ? "https://api.midtrans.com/v2"
   : "https://api.sandbox.midtrans.com/v2";
+
+// ============================================
+// MIDTRANS SDK CLIENTS
+// ============================================
+
+/**
+ * Snap Client - For creating payment transactions
+ */
+export const snap = new midtransClient.Snap({
+  isProduction,
+  serverKey,
+  clientKey,
+});
+
+/**
+ * Core API Client - For checking transaction status, refunds, etc.
+ */
+export const coreApi = new midtransClient.CoreApi({
+  isProduction,
+  serverKey,
+  clientKey,
+});
 
 /**
  * Get Base64 encoded authorization header
@@ -76,6 +112,13 @@ export interface MidtransNotification {
   currency: string;
   // VA specific fields
   va_numbers?: Array<{ va_number: string; bank: string }>;
+  // Permata VA specific
+  permata_va_number?: string;
+  // BCA VA specific
+  bca_va_number?: string;
+  // Mandiri Bill specific
+  bill_key?: string;
+  biller_code?: string;
   // QRIS specific fields
   acquirer?: string;
   // E-wallet specific fields
@@ -188,8 +231,9 @@ export async function createSnapTransaction(
 }
 
 /**
- * Verify Midtrans webhook signature
+ * Verify Midtrans webhook signature using timing-safe comparison
  * Signature = SHA512(order_id + status_code + gross_amount + server_key)
+ * Uses timing-safe comparison to prevent timing attacks
  */
 export function verifySignature(
   orderId: string,
@@ -209,7 +253,20 @@ export function verifySignature(
     .update(payload)
     .digest("hex");
 
-  return calculatedSignature === signatureKey;
+  // Use timing-safe comparison to prevent timing attacks
+  try {
+    const sigBuffer = Buffer.from(signatureKey, 'hex');
+    const calcBuffer = Buffer.from(calculatedSignature, 'hex');
+    
+    if (sigBuffer.length !== calcBuffer.length) {
+      return false;
+    }
+    
+    return crypto.timingSafeEqual(sigBuffer, calcBuffer);
+  } catch {
+    // Fallback to regular comparison if buffer creation fails
+    return calculatedSignature === signatureKey;
+  }
 }
 
 /**
@@ -262,13 +319,31 @@ export async function cancelTransaction(orderId: string): Promise<void> {
 
 /**
  * Map Midtrans transaction status to our PaymentStatus enum
+ * Note: For new code, use mapMidtransToPaymentStatus from payment-utils.ts
+ * which handles ALL Midtrans statuses including CHALLENGE and DENY
  */
-export type PaymentStatusType = "PENDING" | "SUCCESS" | "FAILED" | "EXPIRED" | "REFUND";
+export type PaymentStatusType = 
+  | "PENDING" 
+  | "SUCCESS" 
+  | "FAILED" 
+  | "EXPIRED" 
+  | "REFUNDED"
+  | "CANCELLED"
+  | "CHALLENGE"
+  | "DENY";
 
 export function mapMidtransStatus(
   transactionStatus: string,
   fraudStatus?: string
 ): PaymentStatusType {
+  // Handle fraud status first
+  if (fraudStatus === "challenge") {
+    return "CHALLENGE";
+  }
+  if (fraudStatus === "deny") {
+    return "DENY";
+  }
+  
   // Handle capture (credit card) - check fraud status
   if (transactionStatus === "capture") {
     return fraudStatus === "accept" ? "SUCCESS" : "PENDING";
@@ -278,15 +353,20 @@ export function mapMidtransStatus(
     case "settlement":
       return "SUCCESS";
     case "pending":
+    case "authorize":
       return "PENDING";
     case "deny":
+      return "DENY";
     case "cancel":
-      return "FAILED";
+      return "CANCELLED";
     case "expire":
       return "EXPIRED";
+    case "failure":
+      return "FAILED";
     case "refund":
     case "partial_refund":
-      return "REFUND";
+    case "chargeback":
+      return "REFUNDED";
     default:
       return "PENDING";
   }
@@ -301,9 +381,15 @@ export function isPaymentSuccess(status: PaymentStatusType): boolean {
 
 /**
  * Check if a status indicates payment failure or cancellation
+ * Includes CANCELLED and DENY (new statuses)
  */
 export function isPaymentFailed(status: PaymentStatusType): boolean {
-  return status === "FAILED" || status === "EXPIRED";
+  return (
+    status === "FAILED" ||
+    status === "EXPIRED" ||
+    status === "CANCELLED" ||
+    status === "DENY"
+  );
 }
 
 /**
@@ -361,13 +447,136 @@ export function getPaymentTypeDisplay(paymentType: string): string {
     bni_va: "BNI Virtual Account",
     bri_va: "BRI Virtual Account",
     permata_va: "Permata Virtual Account",
+    cimb_va: "CIMB Virtual Account",
     other_va: "Virtual Account",
     gopay: "GoPay",
     shopeepay: "ShopeePay",
+    dana: "DANA",
+    ovo: "OVO",
+    linkaja: "LinkAja",
     qris: "QRIS",
     cstore: "Convenience Store",
+    alfamart: "Alfamart",
+    indomaret: "Indomaret",
     akulaku: "Akulaku",
+    kredivo: "Kredivo",
   };
 
   return typeMap[paymentType] || paymentType;
+}
+
+// ============================================
+// ADDITIONAL HELPER FUNCTIONS
+// ============================================
+
+/**
+ * Map transaction status with both payment and booking status
+ */
+export type BookingStatusType = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "EXPIRED" | "REFUNDED";
+
+export function mapTransactionStatus(
+  transactionStatus: string,
+  fraudStatus?: string
+): { paymentStatus: PaymentStatusType; bookingStatus: BookingStatusType } {
+  let paymentStatus: PaymentStatusType = "PENDING";
+  let bookingStatus: BookingStatusType = "PENDING";
+
+  switch (transactionStatus) {
+    case "capture":
+      if (fraudStatus === "accept") {
+        paymentStatus = "SUCCESS";
+        bookingStatus = "CONFIRMED";
+      } else if (fraudStatus === "challenge") {
+        paymentStatus = "PENDING";
+        bookingStatus = "PENDING";
+      } else {
+        paymentStatus = "FAILED";
+        bookingStatus = "CANCELLED";
+      }
+      break;
+
+    case "settlement":
+      paymentStatus = "SUCCESS";
+      bookingStatus = "CONFIRMED";
+      break;
+
+    case "pending":
+      paymentStatus = "PENDING";
+      bookingStatus = "PENDING";
+      break;
+
+    case "deny":
+    case "cancel":
+    case "failure":
+      paymentStatus = "FAILED";
+      bookingStatus = "CANCELLED";
+      break;
+
+    case "expire":
+      paymentStatus = "EXPIRED";
+      bookingStatus = "EXPIRED";
+      break;
+
+    case "refund":
+    case "partial_refund":
+      paymentStatus = "REFUNDED";
+      bookingStatus = "REFUNDED";
+      break;
+
+    default:
+      paymentStatus = "PENDING";
+      bookingStatus = "PENDING";
+  }
+
+  return { paymentStatus, bookingStatus };
+}
+
+/**
+ * Format currency for Midtrans (must be integer, no decimal)
+ */
+export function formatAmountForMidtrans(amount: number): number {
+  return Math.round(amount);
+}
+
+/**
+ * Get Snap redirect URL based on environment
+ */
+export function getSnapRedirectUrl(token: string): string {
+  const baseUrl = isProduction
+    ? "https://app.midtrans.com/snap/v2/vtweb"
+    : "https://app.sandbox.midtrans.com/snap/v2/vtweb";
+
+  return `${baseUrl}/${token}`;
+}
+
+/**
+ * Check if Midtrans is properly configured
+ */
+export function isMidtransConfigured(): boolean {
+  return Boolean(serverKey && clientKey);
+}
+
+/**
+ * Get enabled payment methods list
+ */
+export function getEnabledPaymentMethods(): string[] {
+  return [
+    // Credit/Debit Card
+    "credit_card",
+    // Bank Transfer (Virtual Account)
+    "bca_va",
+    "bni_va",
+    "bri_va",
+    "permata_va",
+    "cimb_va",
+    "other_va",
+    // E-Wallets
+    "gopay",
+    "shopeepay",
+    // QRIS
+    "qris",
+    // Convenience Store
+    "alfamart",
+    "indomaret",
+  ];
 }

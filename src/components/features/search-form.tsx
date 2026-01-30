@@ -113,8 +113,15 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
   const handleSwapPorts = () => {
     if (departurePortId && arrivalPortId) {
       const tempDeparture = departurePortId;
-      setValue("departurePortId", arrivalPortId, { shouldValidate: true });
-      setValue("arrivalPortId", tempDeparture, { shouldValidate: true });
+      const tempArrival = arrivalPortId;
+      // Clear first to avoid conflicts, then set new values
+      setValue("departurePortId", "");
+      setValue("arrivalPortId", "");
+      // Use setTimeout to ensure state updates
+      setTimeout(() => {
+        setValue("departurePortId", tempArrival);
+        setValue("arrivalPortId", tempDeparture);
+      }, 0);
     }
   };
 
@@ -124,22 +131,24 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
     <form
       onSubmit={handleSubmit(onSubmit)}
       className={cn(
-        "rounded-2xl bg-white dark:bg-slate-900 shadow-2xl",
-        isHero ? "p-6 md:p-8" : "p-5",
+        "rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 shadow-xl sm:shadow-2xl",
+        isHero ? "p-4 sm:p-6 md:p-8" : "p-3 sm:p-4 md:p-5",
         className
       )}
     >
       <div
         className={cn(
-          "grid gap-4",
-          isHero ? "md:grid-cols-2 lg:grid-cols-[1fr,auto,1fr,1fr,1fr,auto]" : "md:grid-cols-5"
+          "grid gap-3 sm:gap-4",
+          isHero 
+            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr,auto,1fr,1fr,1fr,auto]" 
+            : "grid-cols-1 sm:grid-cols-2 md:grid-cols-5"
         )}
       >
         {/* Departure Port */}
-        <div className={cn("space-y-2", isHero && "lg:col-span-1")}>
-          <Label htmlFor="departurePortId" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30">
-              <MapPin className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+        <div className={cn("space-y-1.5 sm:space-y-2", isHero && "lg:col-span-1")}>
+          <Label htmlFor="departurePortId" className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 sm:gap-2">
+            <div className="p-1 sm:p-1.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30">
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600 dark:text-emerald-400" />
             </div>
             From
           </Label>
@@ -151,7 +160,7 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
             <SelectTrigger 
               id="departurePortId" 
               className={cn(
-                "h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary-400 focus:border-primary-500 transition-colors",
+                "h-11 sm:h-12 text-sm bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary-400 focus:border-primary-500 transition-colors",
                 errors.departurePortId && "border-destructive"
               )}
             >
@@ -161,15 +170,15 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
               {ports.map((port) => (
                 <SelectItem key={port.id} value={port.id}>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{port.name}</span>
-                    <span className="text-xs text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{port.city}</span>
+                    <span className="font-semibold text-sm">{port.name}</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{port.city}</span>
                   </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.departurePortId && (
-            <p className="text-xs text-destructive">{errors.departurePortId.message}</p>
+            <p className="text-[10px] sm:text-xs text-destructive">{errors.departurePortId.message}</p>
           )}
         </div>
 
@@ -182,7 +191,7 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
               size="icon"
               onClick={handleSwapPorts}
               disabled={!departurePortId || !arrivalPortId}
-              className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-600 border-2 border-slate-200 dark:border-slate-700 hover:border-primary-300 transition-all duration-300 disabled:opacity-40"
+              className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-600 border-2 border-slate-200 dark:border-slate-700 hover:border-primary-300 transition-all duration-300 disabled:opacity-40"
             >
               <ArrowLeftRight className="h-4 w-4" />
             </Button>
@@ -190,10 +199,10 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
         )}
 
         {/* Arrival Port */}
-        <div className={cn("space-y-2", isHero && "lg:col-span-1")}>
-          <Label htmlFor="arrivalPortId" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-primary-100 dark:bg-primary-900/30">
-              <MapPin className="h-3.5 w-3.5 text-primary-600 dark:text-primary-400" />
+        <div className={cn("space-y-1.5 sm:space-y-2", isHero && "lg:col-span-1")}>
+          <Label htmlFor="arrivalPortId" className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 sm:gap-2">
+            <div className="p-1 sm:p-1.5 rounded-md bg-primary-100 dark:bg-primary-900/30">
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary-600 dark:text-primary-400" />
             </div>
             To
           </Label>
@@ -205,7 +214,7 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
             <SelectTrigger 
               id="arrivalPortId" 
               className={cn(
-                "h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary-400 focus:border-primary-500 transition-colors",
+                "h-11 sm:h-12 text-sm bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary-400 focus:border-primary-500 transition-colors",
                 errors.arrivalPortId && "border-destructive"
               )}
             >
@@ -215,23 +224,23 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
               {availableArrivalPorts.map((port) => (
                 <SelectItem key={port.id} value={port.id}>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{port.name}</span>
-                    <span className="text-xs text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{port.city}</span>
+                    <span className="font-semibold text-sm">{port.name}</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{port.city}</span>
                   </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.arrivalPortId && (
-            <p className="text-xs text-destructive">{errors.arrivalPortId.message}</p>
+            <p className="text-[10px] sm:text-xs text-destructive">{errors.arrivalPortId.message}</p>
           )}
         </div>
 
         {/* Date Picker */}
-        <div className="space-y-2">
-          <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-amber-100 dark:bg-amber-900/30">
-              <CalendarIcon className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 sm:gap-2">
+            <div className="p-1 sm:p-1.5 rounded-md bg-amber-100 dark:bg-amber-900/30">
+              <CalendarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-600 dark:text-amber-400" />
             </div>
             Date
           </Label>
@@ -241,7 +250,7 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
                 type="button"
                 variant="outline"
                 className={cn(
-                  "w-full h-12 justify-start text-left font-normal bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors",
+                  "w-full h-11 sm:h-12 justify-start text-left font-normal text-sm bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors",
                   !selectedDate && "text-muted-foreground",
                   errors.date && "border-destructive"
                 )}
@@ -261,15 +270,15 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
             </PopoverContent>
           </Popover>
           {errors.date && (
-            <p className="text-xs text-destructive">{errors.date.message}</p>
+            <p className="text-[10px] sm:text-xs text-destructive">{errors.date.message}</p>
           )}
         </div>
 
         {/* Passengers */}
-        <div className="space-y-2">
-          <Label htmlFor="passengers" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-purple-100 dark:bg-purple-900/30">
-              <Users className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label htmlFor="passengers" className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 sm:gap-2">
+            <div className="p-1 sm:p-1.5 rounded-md bg-purple-100 dark:bg-purple-900/30">
+              <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-600 dark:text-purple-400" />
             </div>
             Passengers
           </Label>
@@ -282,34 +291,33 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
               value={passengers}
               onChange={(e) => setValue("passengers", parseInt(e.target.value) || 1, { shouldValidate: true })}
               className={cn(
-                "h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary-400 focus:border-primary-500 transition-colors pl-4 pr-12",
+                "h-11 sm:h-12 text-sm bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary-400 focus:border-primary-500 transition-colors pl-4 pr-12",
                 errors.passengers && "border-destructive"
               )}
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">pax</span>
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs text-muted-foreground">pax</span>
           </div>
           {errors.passengers && (
-            <p className="text-xs text-destructive">{errors.passengers.message}</p>
+            <p className="text-[10px] sm:text-xs text-destructive">{errors.passengers.message}</p>
           )}
         </div>
 
         {/* Search Button */}
-        <div className={cn("flex items-end", isHero && "lg:col-span-1")}>
+        <div className={cn("flex items-end sm:col-span-2 lg:col-span-1", isHero && "lg:col-span-1")}>
           <Button
             type="submit"
             className={cn(
-              "w-full gap-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 transition-all duration-300",
-              isHero ? "h-12" : "h-10"
+              "w-full h-11 sm:h-12 gap-2 text-sm sm:text-base font-semibold bg-linear-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 transition-all duration-300"
             )}
             size={isHero ? "lg" : "default"}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
             ) : (
               <>
-                <Search className="h-5 w-5" />
-                <span className="font-semibold">Search</span>
+                <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>Search</span>
               </>
             )}
           </Button>

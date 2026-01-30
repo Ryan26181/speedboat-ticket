@@ -244,13 +244,26 @@ export default function MyBookingsPage() {
       try {
         const res = await fetch("/api/bookings");
         const data = await res.json();
+        
+        console.log("=== MY BOOKINGS DEBUG ===");
+        console.log("API response:", data);
+        console.log("res.ok:", res.ok);
 
         if (!res.ok) {
           throw new Error(data.message || "Failed to load bookings");
         }
 
-        // Ensure we always set an array, even if the response structure is unexpected
-        const bookingsData = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
+        // Handle nested paginated response: {success: true, data: {data: [...], pagination: {...}}}
+        let bookingsData: Booking[] = [];
+        if (data.data?.data && Array.isArray(data.data.data)) {
+          bookingsData = data.data.data;
+        } else if (Array.isArray(data.data)) {
+          bookingsData = data.data;
+        } else if (Array.isArray(data)) {
+          bookingsData = data;
+        }
+        console.log("bookingsData to set:", bookingsData);
+        console.log("=== END DEBUG ===");
         setBookings(bookingsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load bookings");

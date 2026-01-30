@@ -1,21 +1,18 @@
-// ============================================
-// SIMPLE IN-MEMORY RATE LIMITER
-// For production, use Redis-based solution
-// ============================================
+import { Redis } from 'ioredis';
+import { getRedisConnection } from './queue/connection';
+import { NextResponse } from 'next/server';
+import { logger } from './logger';
 
-interface RateLimitEntry {
-  count: number;
-  firstAttempt: number;
-}
-
-// In-memory store (use Redis in production for multi-instance)
-const rateLimitStore = new Map<string, RateLimitEntry>();
+// ============================================
+// REDIS-BASED RATE LIMITER (PRODUCTION-READY)
+// Supports sliding window algorithm
+// ============================================
 
 // Configuration from environment variables
 const DEFAULT_MAX_ATTEMPTS = parseInt(process.env.RATE_LIMIT_MAX_ATTEMPTS || "5");
 const DEFAULT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_SECONDS || "900") * 1000;
 
-// Different limits for different endpoints
+// Different limits for different endpoints (legacy compatibility)
 export const RATE_LIMITS = {
   login: { windowMs: 15 * 60 * 1000, maxRequests: 5 },
   register: { windowMs: 60 * 60 * 1000, maxRequests: 3 },
@@ -25,8 +22,231 @@ export const RATE_LIMITS = {
   verifyEmail: { windowMs: 15 * 60 * 1000, maxRequests: 10 },
 } as const;
 
+// ============================================
+// RATE LIMITER CLASS (NEW)
+// ============================================
+
+interface RateLimitConfig {
+  windowMs: number;    // Time window in milliseconds
+  maxRequests: number; // Max requests per window
+  keyPrefix?: string;  // Redis key prefix
+}
+
+interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  resetAt: number;
+}
+
+export class RateLimiter {
+  private redis: Redis;
+  private config: Required<RateLimitConfig>;
+
+  constructor(config: RateLimitConfig) {
+    this.redis = getRedisConnection();
+    this.config = {
+      keyPrefix: 'ratelimit:',
+      ...config,
+    };
+  }
+
+  async check(identifier: string): Promise<RateLimitResult> {
+    const key = `${this.config.keyPrefix}${identifier}`;
+    const now = Date.now();
+    const windowStart = now - this.config.windowMs;
+
+    try {
+      // Use Redis sorted set for sliding window
+      const pipeline = this.redis.pipeline();
+      
+      // Remove old entries
+      pipeline.zremrangebyscore(key, 0, windowStart);
+      
+      // Count current entries
+      pipeline.zcard(key);
+      
+      // Add current request
+      pipeline.zadd(key, now, `${now}-${Math.random()}`);
+      
+      // Set expiry
+      pipeline.expire(key, Math.ceil(this.config.windowMs / 1000));
+      
+      const results = await pipeline.exec();
+      const currentCount = (results?.[1]?.[1] as number) || 0;
+
+      const allowed = currentCount < this.config.maxRequests;
+      const remaining = Math.max(0, this.config.maxRequests - currentCount - 1);
+      const resetAt = now + this.config.windowMs;
+
+      if (!allowed) {
+        // Remove the request we just added
+        await this.redis.zremrangebyscore(key, now, now);
+      }
+
+      return { allowed, remaining, resetAt };
+
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('[RATE_LIMIT_ERROR]', { identifier, error: errorMessage });
+      // Fail open - allow request if Redis fails
+      return { allowed: true, remaining: 0, resetAt: now };
+    }
+  }
+
+  /**
+   * Reset rate limit for identifier
+   */
+  async reset(identifier: string): Promise<void> {
+    const key = `${this.config.keyPrefix}${identifier}`;
+    try {
+      await this.redis.del(key);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('[RATE_LIMIT_RESET_ERROR]', { identifier, error: errorMessage });
+    }
+  }
+
+  /**
+   * Get current usage for identifier
+   */
+  async getUsage(identifier: string): Promise<{ count: number; remaining: number }> {
+    const key = `${this.config.keyPrefix}${identifier}`;
+    const now = Date.now();
+    const windowStart = now - this.config.windowMs;
+
+    try {
+      await this.redis.zremrangebyscore(key, 0, windowStart);
+      const count = await this.redis.zcard(key);
+      return {
+        count,
+        remaining: Math.max(0, this.config.maxRequests - count),
+      };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('[RATE_LIMIT_USAGE_ERROR]', { identifier, error: errorMessage });
+      return { count: 0, remaining: this.config.maxRequests };
+    }
+  }
+}
+
+// ============================================
+// PRE-CONFIGURED LIMITERS
+// ============================================
+
+// Payment creation: 10 requests per minute per user
+export const paymentRateLimiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 10,
+  keyPrefix: 'ratelimit:payment:',
+});
+
+// Webhook: 100 requests per minute per IP
+export const webhookRateLimiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 100,
+  keyPrefix: 'ratelimit:webhook:',
+});
+
+// API general: 100 requests per minute per user
+export const apiRateLimiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 100,
+  keyPrefix: 'ratelimit:api:',
+});
+
+// Booking creation: 5 requests per minute per user
+export const bookingRateLimiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 5,
+  keyPrefix: 'ratelimit:booking:',
+});
+
+// Search: 30 requests per minute per user
+export const searchRateLimiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 30,
+  keyPrefix: 'ratelimit:search:',
+});
+
+// Auth: 5 login attempts per 15 minutes
+export const authRateLimiter = new RateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 5,
+  keyPrefix: 'ratelimit:auth:',
+});
+
+// ============================================
+// RATE LIMIT RESPONSE
+// ============================================
+
+export function rateLimitResponse(result: RateLimitResult): NextResponse {
+  return NextResponse.json(
+    {
+      success: false,
+      error: 'Too many requests. Please try again later.',
+      retryAfter: Math.ceil((result.resetAt - Date.now()) / 1000),
+    },
+    {
+      status: 429,
+      headers: {
+        'X-RateLimit-Remaining': result.remaining.toString(),
+        'X-RateLimit-Reset': result.resetAt.toString(),
+        'Retry-After': Math.ceil((result.resetAt - Date.now()) / 1000).toString(),
+      },
+    }
+  );
+}
+
+// ============================================
+// RATE LIMIT MIDDLEWARE HELPER
+// ============================================
+
 /**
- * Check if an identifier (IP or email) is rate limited
+ * Check rate limit and return response if exceeded (async version)
+ */
+export async function checkRateLimitAsync(
+  limiter: RateLimiter,
+  identifier: string
+): Promise<NextResponse | null> {
+  const result = await limiter.check(identifier);
+  
+  if (!result.allowed) {
+    logger.warn('[RATE_LIMIT_EXCEEDED]', { 
+      identifier, 
+      remaining: result.remaining,
+      resetAt: new Date(result.resetAt).toISOString(),
+    });
+    return rateLimitResponse(result);
+  }
+  
+  return null;
+}
+
+/**
+ * Get rate limit headers to add to response
+ */
+export function getRateLimitHeaders(result: RateLimitResult): Record<string, string> {
+  return {
+    'X-RateLimit-Remaining': result.remaining.toString(),
+    'X-RateLimit-Reset': result.resetAt.toString(),
+  };
+}
+
+// ============================================
+// LEGACY COMPATIBILITY - IN-MEMORY FALLBACK
+// ============================================
+
+interface RateLimitEntry {
+  count: number;
+  firstAttempt: number;
+}
+
+// In-memory store (fallback when Redis unavailable)
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+/**
+ * Check if an identifier (IP or email) is rate limited (SYNCHRONOUS - Legacy)
+ * For new code, use RateLimiter class with Redis
  * 
  * @param identifier - IP address or email
  * @param windowMs - Time window in milliseconds (default: 15 minutes)
@@ -176,3 +396,5 @@ export function cleanupRateLimitStore(): void {
 if (typeof setInterval !== "undefined") {
   setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
 }
+
+export type { RateLimitConfig, RateLimitResult };

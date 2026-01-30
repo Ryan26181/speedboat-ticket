@@ -50,6 +50,18 @@ export function PaymentWidget({
   const [isLoading, setIsLoading] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
 
+  // Reset hasOpened when snapToken changes (new payment token)
+  useEffect(() => {
+    setHasOpened(false);
+  }, [snapToken]);
+
+  // Check if snap is already loaded (e.g., from previous render)
+  useEffect(() => {
+    if (window.snap && !isSnapReady) {
+      setIsSnapReady(true);
+    }
+  }, [isSnapReady]);
+
   // Open Snap payment popup
   const openSnapPopup = useCallback(() => {
     if (!window.snap || !snapToken) return;
@@ -80,11 +92,23 @@ export function PaymentWidget({
     });
   }, [snapToken, onSuccess, onPending, onError, onClose]);
 
-  // Auto-open on mount if enabled
+  // Auto-open on mount if enabled (with small delay to ensure Snap is ready)
   useEffect(() => {
-    if (autoOpen && isSnapReady && snapToken && !hasOpened) {
-      setHasOpened(true);
-      openSnapPopup();
+    console.log("[PAYMENT_WIDGET] autoOpen check:", { autoOpen, isSnapReady, snapToken: !!snapToken, hasOpened, windowSnap: !!window.snap });
+    
+    if (autoOpen && snapToken && !hasOpened) {
+      // Check if snap is ready (either from state or window)
+      const snapAvailable = isSnapReady || !!window.snap;
+      
+      if (snapAvailable) {
+        setHasOpened(true);
+        // Small delay to ensure DOM is ready
+        const timer = setTimeout(() => {
+          console.log("[PAYMENT_WIDGET] Auto-opening popup");
+          openSnapPopup();
+        }, 150);
+        return () => clearTimeout(timer);
+      }
     }
   }, [autoOpen, isSnapReady, snapToken, hasOpened, openSnapPopup]);
 

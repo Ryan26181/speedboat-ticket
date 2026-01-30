@@ -132,6 +132,10 @@
 
 /* ===== Tailwind v4 Theme Configuration ===== */
 @theme inline {
+  /* Custom Breakpoints */
+  --breakpoint-xs: 475px;
+  --breakpoint-3xl: 1920px;
+  
   /* Colors mapped from CSS variables */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -203,9 +207,10 @@
   --radius-4xl: calc(var(--radius) + 16px);
 
   /* Fonts */
-  --font-sans: 'Inter', var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Inter', var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-plus-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   /* Box Shadows */
   --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
@@ -247,6 +252,31 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+/* ===== Typography ===== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.125rem; }
+h6 { font-size: 1rem; }
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-display {
+  font-family: var(--font-display);
 }
 
 /* ===== Scrollbar Styles ===== */
@@ -512,14 +542,56 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+  
+  /* Prevent horizontal scroll */
+  html, body {
+    @apply overflow-x-hidden;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 /* ===== Component Classes ===== */
 @layer components {
+  /* Responsive Container */
+  .container-responsive {
+    @apply w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
+  }
+  
+  /* Section Spacing */
+  .section-spacing {
+    @apply py-8 sm:py-12 md:py-16 lg:py-20;
+  }
+  
+  /* Card Responsive */
+  .card-responsive {
+    @apply rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6;
+  }
+  
+  /* Touch Friendly Button */
+  .btn-touch {
+    @apply min-h-[44px] min-w-[44px] px-4 py-2.5;
+  }
+  
+  /* Form Input Responsive */
+  .input-responsive {
+    @apply h-11 sm:h-12 text-base;
+  }
+  
+  /* Sticky Bottom Bar (for mobile CTAs) */
+  .sticky-bottom-bar {
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-40;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
   /* Card hover effect */
   .card-hover {
     @apply transition-all duration-300;
@@ -571,6 +643,25 @@ body {
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+  
+  /* Safe Area (for notched phones) */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .safe-left {
+    padding-left: env(safe-area-inset-left, 0);
+  }
+  .safe-right {
+    padding-right: env(safe-area-inset-right, 0);
+  }
+  
+  /* Text balance for headings */
+  .text-balance {
+    text-wrap: balance;
   }
 
   /* Animation delays */

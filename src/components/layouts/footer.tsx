@@ -1,170 +1,121 @@
-import Link from "next/link";
-import { Ship, Facebook, Twitter, Instagram, Mail, Phone, MapPin } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
+import { Container } from '@/components/ui/container';
+import { Ship, Facebook, Instagram, Twitter, Mail, Phone } from 'lucide-react';
 
-interface FooterProps {
-  className?: string;
-}
-
-const footerLinks = {
-  company: [
-    { href: "/about", label: "About Us" },
-    { href: "/contact", label: "Contact" },
-    { href: "/careers", label: "Careers" },
-    { href: "/press", label: "Press" },
-  ],
-  support: [
-    { href: "/help", label: "Help Center" },
-    { href: "/faq", label: "FAQ" },
-    { href: "/refund-policy", label: "Refund Policy" },
-    { href: "/terms", label: "Terms of Service" },
-  ],
-  routes: [
-    { href: "/routes/popular", label: "Popular Routes" },
-    { href: "/routes/new", label: "New Destinations" },
-    { href: "/schedules", label: "Schedules" },
-    { href: "/ports", label: "Ports" },
-  ],
-};
-
-const socialLinks = [
-  { href: "https://facebook.com", icon: Facebook, label: "Facebook" },
-  { href: "https://twitter.com", icon: Twitter, label: "Twitter" },
-  { href: "https://instagram.com", icon: Instagram, label: "Instagram" },
-];
-
-export function Footer({ className }: FooterProps) {
+export function Footer() {
+  const t = useTranslations('footer');
   const currentYear = new Date().getFullYear();
 
+  const links = {
+    company: [
+      { name: t('about'), href: '/about' },
+      { name: t('careers'), href: '/careers' },
+      { name: t('blog'), href: '/blog' },
+    ],
+    support: [
+      { name: t('contact'), href: '/contact' },
+      { name: t('faq'), href: '/faq' },
+      { name: t('help'), href: '/help' },
+    ],
+    legal: [
+      { name: t('terms'), href: '/terms' },
+      { name: t('privacy'), href: '/privacy' },
+    ],
+  };
+
   return (
-    <footer className={cn("bg-muted/50 border-t", className)}>
-      <div className="container py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-          {/* Brand Section */}
-          <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2">
-              <Ship className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">SpeedBoat</span>
-            </Link>
-            <p className="mt-4 text-sm text-muted-foreground max-w-sm">
-              Your trusted partner for speedboat travel. Book tickets online for the fastest and most comfortable sea travel experience.
-            </p>
-            
-            {/* Contact Info */}
-            <div className="mt-6 space-y-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                <span>support@speedboat.com</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="h-4 w-4" />
-                <span>+62 123 456 7890</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                <span>Jakarta, Indonesia</span>
+    <footer className="bg-gray-900 text-gray-300">
+      <Container>
+        <div className="py-10 sm:py-12 lg:py-16">
+          {/* Main Grid */}
+          <div className="grid gap-8 grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+            {/* Brand */}
+            <div className="col-span-2 sm:col-span-2 md:col-span-4 lg:col-span-1">
+              <Link href="/" className="flex items-center gap-2 mb-4">
+                <Ship className="h-6 w-6 text-primary" />
+                <span className="font-bold text-xl text-white">SpeedBoat</span>
+              </Link>
+              <p className="text-sm text-gray-400 mb-4 max-w-xs">
+                {t('description')}
+              </p>
+              
+              {/* Social */}
+              <div className="flex gap-3">
+                {[Facebook, Instagram, Twitter].map((Icon, i) => (
+                  <a
+                    key={i}
+                    href="#"
+                    className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </a>
+                ))}
               </div>
             </div>
 
-            {/* Social Links */}
-            <div className="mt-6 flex gap-4">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full bg-muted p-2 text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                  aria-label={social.label}
-                >
-                  <social.icon className="h-4 w-4" />
-                </a>
-              ))}
+            {/* Links Columns */}
+            <div>
+              <h4 className="font-semibold text-white mb-3 text-sm">{t('company')}</h4>
+              <ul className="space-y-2">
+                {links.company.map(link => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm hover:text-white transition-colors">
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
 
-          {/* Company Links */}
-          <div>
-            <h3 className="font-semibold mb-4">Company</h3>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+            <div>
+              <h4 className="font-semibold text-white mb-3 text-sm">{t('support')}</h4>
+              <ul className="space-y-2">
+                {links.support.map(link => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm hover:text-white transition-colors">
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Support Links */}
-          <div>
-            <h3 className="font-semibold mb-4">Support</h3>
-            <ul className="space-y-3">
-              {footerLinks.support.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+            <div>
+              <h4 className="font-semibold text-white mb-3 text-sm">{t('legal')}</h4>
+              <ul className="space-y-2">
+                {links.legal.map(link => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm hover:text-white transition-colors">
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Routes Links */}
-          <div>
-            <h3 className="font-semibold mb-4">Destinations</h3>
-            <ul className="space-y-3">
-              {footerLinks.routes.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
+            {/* Contact - Desktop */}
+            <div className="hidden lg:block">
+              <h4 className="font-semibold text-white mb-3 text-sm">{t('contactTitle')}</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" /> info@speedboat.com
                 </li>
-              ))}
-            </ul>
+                <li className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" /> +62 123 456 7890
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
-        <Separator className="my-8" />
-
-        {/* Bottom Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            © {currentYear} SpeedBoat Tickets. All rights reserved.
+        {/* Bottom */}
+        <div className="py-4 border-t border-gray-800 text-center sm:text-left">
+          <p className="text-sm text-gray-500">
+            {t('copyright', { year: currentYear, appName: 'SpeedBoat Ticket' })}
           </p>
-          <div className="flex gap-6">
-            <Link
-              href="/privacy"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              href="/terms"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Terms of Service
-            </Link>
-            <Link
-              href="/cookies"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Cookies
-            </Link>
-          </div>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 }

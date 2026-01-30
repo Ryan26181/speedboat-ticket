@@ -6,3 +6,5 @@ export * from "./use-schedules";
 export * from "./use-bookings";
 export * from "./use-users";
 export * from "./use-tickets";
+export * from "./use-media-query";
+export * from "./use-scroll-lock";

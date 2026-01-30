@@ -488,6 +488,7 @@
       "tagline": "Ticket Booking",
       "description": "Your trusted partner for fast, comfortable, and reliable sea travel across Indonesian islands. Book your journey today!"
     },
+    "description": "Your trusted partner for fast, comfortable, and reliable sea travel across Indonesian islands.",
     "newsletter": {
       "title": "Subscribe to our newsletter",
       "description": "Get exclusive deals, travel tips, and updates delivered to your inbox",
@@ -500,6 +501,19 @@
       "support": "Support",
       "legal": "Legal"
     },
+    "company": "Company",
+    "support": "Support",
+    "legal": "Legal",
+    "contactTitle": "Contact",
+    "about": "About Us",
+    "careers": "Careers",
+    "blog": "Blog",
+    "contact": "Contact Us",
+    "faq": "FAQ",
+    "help": "Help Center",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "copyright": "© {year} {appName}. All rights reserved.",
     "links": {
       "explore": {
         "popularRoutes": "Popular Routes",

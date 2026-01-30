@@ -45,15 +45,15 @@ interface ValidationResult {
     };
     booking: {
       bookingCode: string;
-      schedule: {
-        departureTime: string;
-        arrivalTime: string;
-        route: {
-          departurePort: { name: string };
-          arrivalPort: { name: string };
-        };
-        ship: { name: string };
+    };
+    schedule: {
+      departureTime: string;
+      arrivalTime: string;
+      route: {
+        departurePort: { name: string };
+        arrivalPort: { name: string };
       };
+      ship: { name: string };
     };
   };
 }
@@ -85,12 +85,19 @@ export default function ValidateTicketPage() {
     setValidationResult(null);
 
     try {
-      const res = await fetch(`/api/tickets/${code}/validate`);
+      const res = await fetch(`/api/tickets/${encodeURIComponent(code)}/validate`);
       const data = await res.json();
+      
+      console.log("=== VALIDATION DEBUG ===");
+      console.log("res.ok:", res.ok);
+      console.log("Full response:", JSON.stringify(data, null, 2));
+      console.log("data.data:", data.data);
+      console.log("data.data?.valid:", data.data?.valid);
+      console.log("=== END DEBUG ===");
 
       const result: ValidationResult = {
-        valid: res.ok && data.data?.isValid,
-        message: data.message || (res.ok ? "Ticket validated" : "Invalid ticket"),
+        valid: res.ok && data.data?.valid,
+        message: data.data?.message || data.data?.error || data.message || (res.ok ? "Ticket validated" : "Invalid ticket"),
         ticket: data.data?.ticket,
       };
 
@@ -375,7 +382,7 @@ export default function ValidateTicketPage() {
                             </p>
                             <Badge
                               variant={
-                                validationResult.ticket.status === "ACTIVE"
+                                validationResult.ticket.status === "ACTIVE" || validationResult.ticket.status === "VALID"
                                   ? "default"
                                   : validationResult.ticket.status === "USED"
                                   ? "secondary"
@@ -397,31 +404,35 @@ export default function ValidateTicketPage() {
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-primary" />
                             <span className="font-medium">
-                              {validationResult.ticket.booking.schedule.route.departurePort.name}
+                              {validationResult.ticket.schedule?.route?.departurePort?.name || "N/A"}
                             </span>
                             <span className="text-muted-foreground">→</span>
                             <span className="font-medium">
-                              {validationResult.ticket.booking.schedule.route.arrivalPort.name}
+                              {validationResult.ticket.schedule?.route?.arrivalPort?.name || "N/A"}
                             </span>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
-                              {format(
-                                new Date(validationResult.ticket.booking.schedule.departureTime),
-                                "MMM d, yyyy"
-                              )}
+                              {validationResult.ticket.schedule?.departureTime
+                                ? format(
+                                    new Date(validationResult.ticket.schedule.departureTime),
+                                    "MMM d, yyyy"
+                                  )
+                                : "N/A"}
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="h-4 w-4" />
-                              {format(
-                                new Date(validationResult.ticket.booking.schedule.departureTime),
-                                "HH:mm"
-                              )}
+                              {validationResult.ticket.schedule?.departureTime
+                                ? format(
+                                    new Date(validationResult.ticket.schedule.departureTime),
+                                    "HH:mm"
+                                  )
+                                : "N/A"}
                             </span>
                             <span className="flex items-center gap-1">
                               <Ship className="h-4 w-4" />
-                              {validationResult.ticket.booking.schedule.ship.name}
+                              {validationResult.ticket.schedule?.ship?.name || "N/A"}
                             </span>
                           </div>
                         </div>
@@ -439,7 +450,7 @@ export default function ValidateTicketPage() {
                         {/* Actions */}
                         <div className="flex gap-2 pt-4">
                           {validationResult.valid &&
-                            validationResult.ticket.status === "ACTIVE" && (
+                            (validationResult.ticket.status === "ACTIVE" || validationResult.ticket.status === "VALID") && (
                               <Button
                                 onClick={handleCheckIn}
                                 disabled={isCheckingIn}

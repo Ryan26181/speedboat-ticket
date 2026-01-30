@@ -195,8 +195,8 @@ export default function BookingsPage() {
       header: "Customer",
       render: (row) => (
         <div>
-          <p className="font-medium">{row.user.name || "N/A"}</p>
-          <p className="text-xs text-muted-foreground">{row.user.email}</p>
+          <p className="font-medium">{row.user?.name || "N/A"}</p>
+          <p className="text-xs text-muted-foreground">{row.user?.email || "N/A"}</p>
         </div>
       ),
     },

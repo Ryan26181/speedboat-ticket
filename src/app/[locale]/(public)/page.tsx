@@ -6,73 +6,107 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SearchForm } from "@/components/features/search-form";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { prisma } from "@/lib/prisma";
 
-// Popular routes component (could fetch from API)
+// Format duration from minutes to readable string
+function formatDuration(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (mins === 0) {
+    return `${hours} hr${hours > 1 ? 's' : ''}`;
+  }
+  return `${hours}h ${mins}m`;
+}
+
+// Format price to Indonesian Rupiah
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
+// Popular routes component - fetches from database
 async function PopularRoutes() {
   const t = await getTranslations('home');
-  // In production, this would fetch from API
-  const popularRoutes = [
-    { from: "Batam", to: "Singapore", price: "Rp 350.000", duration: "45 min", rating: 4.8 },
-    { from: "Bali", to: "Nusa Penida", price: "Rp 150.000", duration: "30 min", rating: 4.9 },
-    { from: "Merak", to: "Bakauheni", price: "Rp 50.000", duration: "2 hrs", rating: 4.5 },
-    { from: "Ketapang", to: "Gilimanuk", price: "Rp 45.000", duration: "45 min", rating: 4.6 },
-  ];
+  
+  // Fetch active routes from database (limit to 4)
+  const routes = await prisma.route.findMany({
+    where: { status: "ACTIVE" },
+    take: 4,
+    orderBy: { createdAt: "desc" },
+    include: {
+      departurePort: { select: { name: true, city: true } },
+      arrivalPort: { select: { name: true, city: true } },
+    },
+  });
+
+  // If no routes in database, show empty state
+  if (routes.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Ship className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">No routes available yet</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      {popularRoutes.map((route, idx) => (
-        <Card key={idx} className="group cursor-pointer overflow-hidden border-0 bg-white dark:bg-slate-900 shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary-500/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <CardContent className="p-6 relative">
-            {/* Rating Badge */}
-            <div className="absolute top-4 right-4 flex items-center gap-1 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-2 py-1 rounded-full text-xs font-semibold">
-              <Star className="h-3 w-3 fill-current" />
-              {route.rating}
-            </div>
-            
-            {/* Route visualization */}
-            <div className="flex flex-col gap-3 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-500 shadow-lg shadow-emerald-500/30">
-                  <span className="text-white text-xs font-bold">{t('routes.from')}</span>
+      {routes.map((route) => (
+        <Link key={route.id} href={`/search?from=${route.departurePortId}&to=${route.arrivalPortId}`}>
+          <Card className="group cursor-pointer overflow-hidden border-0 bg-white dark:bg-slate-900 shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary-500/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardContent className="p-6 relative">
+              {/* Route visualization */}
+              <div className="flex flex-col gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-500 shadow-lg shadow-emerald-500/30">
+                    <span className="text-white text-xs font-bold">{t('routes.from')}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-lg text-foreground">{route.departurePort.city}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-bold text-lg text-foreground">{route.from}</span>
+                
+                <div className="flex items-center gap-3 pl-5">
+                  <div className="w-0.5 h-6 bg-gradient-to-b from-emerald-400 to-primary-500 rounded-full"></div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Ship className="h-3.5 w-3.5 text-primary-500" />
+                    <span>{formatDuration(route.estimatedDuration)}</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30">
+                    <span className="text-white text-xs font-bold">{t('routes.to')}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-lg text-foreground">{route.arrivalPort.city}</span>
+                  </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 pl-5">
-                <div className="w-0.5 h-6 bg-gradient-to-b from-emerald-400 to-primary-500 rounded-full"></div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Ship className="h-3.5 w-3.5 text-primary-500" />
-                  <span>{route.duration}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30">
-                  <span className="text-white text-xs font-bold">{t('routes.to')}</span>
-                </div>
+              {/* Price and CTA */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-lg text-foreground">{route.to}</span>
+                  <p className="text-xs text-muted-foreground mb-1">{t('routes.startingFrom')}</p>
+                  <p className="text-xl font-extrabold text-primary-600">
+                    {formatPrice(route.basePrice)}
+                  </p>
+                </div>
+                <div className="h-10 w-10 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-500 transition-all duration-300">
+                  <ArrowRight className="h-5 w-5 text-primary-500 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" />
                 </div>
               </div>
-            </div>
-            
-            {/* Price and CTA */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">{t('routes.startingFrom')}</p>
-                <p className="text-xl font-extrabold text-primary-600">
-                  {route.price}
-                </p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:bg-primary-500 transition-all duration-300">
-                <ArrowRight className="h-5 w-5 text-primary-500 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       ))}
     </div>
   );

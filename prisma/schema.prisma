@@ -56,7 +56,23 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   EXPIRED
-  REFUND
+  REFUNDED
+  CANCELLED
+  CHALLENGE // For credit card fraud review
+  DENY // Payment denied
+}
+
+// Payment event types for audit log
+enum PaymentEventType {
+  CREATED // Payment record created
+  TOKEN_GENERATED // Snap token generated
+  WEBHOOK_RECEIVED // Webhook received from Midtrans
+  STATUS_CHANGED // Status changed
+  TICKET_GENERATED // Tickets generated
+  EMAIL_SENT // Email notification sent
+  REFUND_INITIATED // Refund started
+  REFUND_COMPLETED // Refund completed
+  ERROR // Error occurred
 }
 
 enum TicketStatus {
@@ -280,8 +296,12 @@ model Schedule {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // ===== Optimized indexes =====
   @@index([departureTime])
   @@index([status])
+  @@index([status, departureTime]) // For search queries
+  @@index([routeId, status, departureTime]) // For route search
+  @@index([availableSeats, status]) // For availability check
   @@map("schedules")
 }
 
@@ -308,9 +328,13 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // ===== Optimized indexes =====
   @@index([bookingCode])
   @@index([status])
   @@index([userId])
+  @@index([status, createdAt(sort: Desc)]) // For dashboard queries
+  @@index([userId, status]) // For user bookings
+  @@index([scheduleId, status]) // For schedule queries
   @@map("bookings")
 }
 
@@ -334,31 +358,180 @@ model Passenger {
 }
 
 model Payment {
-  id             String        @id @default(cuid())
-  bookingId      String        @unique
-  orderId        String        @unique
-  transactionId  String?
-  paymentType    String?
-  paymentChannel String?
-  amount         Int // in IDR
-  status         PaymentStatus @default(PENDING)
-  paidAt         DateTime?
-  expiredAt      DateTime
-  vaNumber       String?
-  bank           String?
-  qrisUrl        String?
-  deeplinkUrl    String?
-  rawResponse    Json?
+  id        String @id @default(cuid())
+  bookingId String @unique
+  orderId   String @unique
+
+  // Amount
+  amount Int // Total amount in IDR
+
+  // Payment Method & Status
+  method String? // CREDIT_CARD, BANK_TRANSFER, GOPAY, QRIS, etc.
+  status PaymentStatus @default(PENDING)
+
+  // ===== MIDTRANS FIELDS =====
+
+  // Midtrans Snap Token
+  midtransToken       String? // Snap token for payment popup
+  midtransRedirectUrl String? // Redirect URL from Midtrans
+
+  // Midtrans Transaction Details (from notification)
+  transactionId   String?   @unique // Midtrans transaction ID (unique for idempotency)
+  transactionTime DateTime? // Transaction time from Midtrans
+  paymentType     String? // Payment type (credit_card, bank_transfer, gopay, etc.)
+  paymentChannel  String? // Payment channel/bank
+
+  // Virtual Account / QRIS / E-Wallet specific
+  vaNumber    String? // Virtual Account number
+  bank        String? // Bank for VA payments
+  qrisUrl     String? // QRIS image URL
+  deeplinkUrl String? // E-wallet deeplink URL
+
+  // Midtrans Response (store full response for debugging)
+  rawResponse Json? // Full notification response
+
+  // Timestamps
+  paidAt    DateTime? // When payment was completed
+  expiredAt DateTime // Payment expiry time
+
+  // Refund (if applicable)
+  refundedAt   DateTime?
+  refundAmount Int?
+  refundReason String?
+
+  // ===== IDEMPOTENCY & AUDIT FIELDS =====
+  processedWebhooks String[]  @default([]) // Array of processed idempotency keys
+  lastWebhookAt     DateTime? // Last webhook received
+  webhookCount      Int       @default(0) // Total webhooks received
+  version           Int       @default(0) // Optimistic locking version
+
+  // ===== END MIDTRANS FIELDS =====
 
   // Relations
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking   Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  logs      PaymentLog[]
+  auditLogs PaymentAuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // ===== Optimized indexes =====
   @@index([orderId])
   @@index([status])
+  @@index([transactionId])
+  @@index([createdAt])
+  @@index([status, createdAt]) // For recovery jobs
+  @@index([status, lastWebhookAt]) // For stuck payment detection
+  @@index([bookingId, status]) // For booking queries
   @@map("payments")
+}
+
+// ==================== PAYMENT AUDIT LOG ====================
+// Records ALL payment events for debugging and compliance
+
+model PaymentLog {
+  id        String @id @default(cuid())
+  paymentId String
+
+  // Event details
+  eventType PaymentEventType
+
+  // Status tracking
+  previousStatus String? // Status before this event
+  newStatus      String? // Status after this event
+
+  // Midtrans data
+  midtransOrderId     String?
+  midtransStatus      String? // Raw transaction_status from Midtrans
+  midtransFraudStatus String? // Raw fraud_status from Midtrans
+  midtransPaymentType String?
+
+  // Full payload for debugging
+  rawPayload Json?
+
+  // Error tracking
+  errorMessage String?
+  errorStack   String?
+
+  // Metadata
+  ipAddress    String?
+  userAgent    String?
+  processedBy  String? // System or user who processed
+  processingMs Int? // Processing time in milliseconds
+
+  // Relations
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([paymentId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([midtransOrderId])
+  @@map("payment_logs")
+}
+
+// ==================== PAYMENT AUDIT LOG (for atomic operations) ====================
+// Records webhook processing attempts for idempotency tracking
+
+model PaymentAuditLog {
+  id        String  @id @default(cuid())
+  paymentId String
+  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  action         String // WEBHOOK_PROCESSED, MANUAL_UPDATE, REFUND, etc.
+  previousStatus String?
+  newStatus      String?
+  webhookPayload Json?
+  idempotencyKey String?
+  requestId      String?
+
+  // Actor info (for manual changes)
+  actorId   String?
+  actorType String? // SYSTEM, USER, ADMIN
+
+  metadata Json? // Additional context
+
+  processedAt DateTime @default(now())
+
+  // ===== Optimized indexes =====
+  @@index([paymentId])
+  @@index([action])
+  @@index([processedAt])
+  @@index([idempotencyKey])
+  @@index([paymentId, processedAt(sort: Desc)]) // For audit history
+  @@index([action, processedAt]) // For analytics
+  @@map("payment_audit_logs")
+}
+
+// ==================== WEBHOOK LOCK ====================
+// Prevents race conditions in webhook processing
+
+model WebhookLock {
+  id        String   @id @default(cuid())
+  orderId   String   @unique // Midtrans order_id
+  lockedAt  DateTime @default(now())
+  expiresAt DateTime // Lock expires after X seconds
+  lockedBy  String? // Instance ID for distributed systems
+
+  @@index([orderId])
+  @@index([expiresAt])
+  @@map("webhook_locks")
+}
+
+// ==================== IDEMPOTENCY RECORD ====================
+// Prevents double payment creation from duplicate requests
+
+model IdempotencyRecord {
+  id        String   @id @default(cuid())
+  key       String   @unique // Client-provided idempotency key
+  response  Json // Cached response
+  expiresAt DateTime // When this record expires
+  createdAt DateTime @default(now())
+
+  @@index([key])
+  @@index([expiresAt])
+  @@map("idempotency_records")
 }
 
 model Ticket {

@@ -110,8 +110,9 @@ export default function UserBookingsPage() {
         throw new Error(data.message || "Failed to load bookings");
       }
 
-      setBookings(data.data || []);
-      setMeta(data.meta || null);
+      // API returns { success, data: { data: [...], pagination: {...} } }
+      setBookings(data.data?.data || []);
+      setMeta(data.data?.pagination || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

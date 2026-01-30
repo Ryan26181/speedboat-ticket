@@ -4,6 +4,7 @@ import {
   generateQRDataURL,
   encodeQRData,
   createTicketQRData,
+  decodeQRData,
   type TicketQRData,
 } from "@/lib/qr-generator";
 import type { Ticket, Passenger, Booking, Schedule, Route, Port, Ship } from "@prisma/client";
@@ -148,10 +149,22 @@ export async function generateTicketsForBooking(
 /**
  * Validate a ticket for check-in
  * Returns validation result without modifying the ticket
+ * Accepts either a ticket code (TIK-XXXX) or a full QR string (SPB:base64)
  */
 export async function validateTicket(
-  ticketCode: string
+  codeOrQRString: string
 ): Promise<TicketValidationResult> {
+  // Parse QR string to extract ticket code if needed
+  let ticketCode = codeOrQRString;
+  
+  if (codeOrQRString.startsWith("SPB:")) {
+    const qrData = decodeQRData(codeOrQRString);
+    if (!qrData || !qrData.ticketCode) {
+      return { valid: false, error: "Invalid QR code format" };
+    }
+    ticketCode = qrData.ticketCode;
+  }
+  
   const ticket = await prisma.ticket.findUnique({
     where: { ticketCode },
     include: {
@@ -255,17 +268,21 @@ export async function validateTicket(
 /**
  * Check-in a ticket
  * Marks the ticket as USED and records check-in time and operator
+ * Accepts either a ticket code (TIK-XXXX) or a full QR string (SPB:base64)
  */
 export async function checkInTicket(
-  ticketCode: string,
+  codeOrQRString: string,
   operatorId: string
 ): Promise<CheckInResult> {
   // First validate the ticket
-  const validation = await validateTicket(ticketCode);
+  const validation = await validateTicket(codeOrQRString);
 
-  if (!validation.valid) {
+  if (!validation.valid || !validation.ticket) {
     return { ...validation, checkedIn: false };
   }
+
+  // Use the ticket code from the validated ticket
+  const ticketCode = validation.ticket.ticketCode;
 
   // Perform check-in
   const updatedTicket = await prisma.ticket.update({

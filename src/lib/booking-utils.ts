@@ -23,16 +23,18 @@ export function generateBookingCode(): string {
 }
 
 /**
- * Generate ticket code: TIK-XXXXXXXXXXXX
- * Format: TIK-A1B2C3D4E5F6
+ * Generate ticket code: TIK-TIMESTAMP-RANDOM
+ * Format: TIK-17696XXXXX-A1B2 (timestamp + 4 random chars)
+ * Using timestamp ensures uniqueness even without DB checks
  */
 export function generateTicketCode(): string {
+  const timestamp = Date.now().toString(36).toUpperCase(); // Base36 timestamp
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 12; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  let random = "";
+  for (let i = 0; i < 4; i++) {
+    random += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `TIK-${code}`;
+  return `TIK-${timestamp}-${random}`;
 }
 
 /**

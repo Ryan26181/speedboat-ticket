@@ -1,8 +1,9 @@
 "use client";
 
 import { Link } from "@/i18n/routing";
-import { Mail, Phone, MapPin, Facebook, Instagram, Twitter, Youtube, ArrowRight, Send } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Instagram, Twitter, Youtube, ArrowRight, Send, Ship } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Container } from "@/components/ui/container";
 
 export function Footer() {
   const t = useTranslations('footer');
@@ -55,13 +56,13 @@ export function Footer() {
 
       {/* Newsletter Section */}
       <div className="relative border-b border-slate-800">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+        <Container className="py-10 sm:py-12 lg:py-16">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
             <div className="text-center lg:text-left">
-              <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold font-heading text-white mb-2">
                 {t('newsletter.title')}
               </h3>
-              <p className="text-slate-400">
+              <p className="text-sm sm:text-base text-slate-400">
                 {t('newsletter.description')}
               </p>
             </div>
@@ -72,12 +73,12 @@ export function Footer() {
                   <input
                     type="email"
                     placeholder={t('newsletter.placeholder')}
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                    className="w-full pl-12 pr-4 py-3 sm:py-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all input-responsive"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-xl hover:shadow-cyan-500/30 transition-all duration-200"
+                  className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-xl hover:shadow-cyan-500/30 transition-all duration-200 btn-touch"
                 >
                   <span>{t('newsletter.subscribe')}</span>
                   <Send className="w-4 h-4" />
@@ -85,20 +86,20 @@ export function Footer() {
               </form>
             </div>
           </div>
-        </div>
+        </Container>
       </div>
 
       {/* Main Footer */}
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12">
+      <Container className="relative py-12 sm:py-16 lg:py-20">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12">
           {/* Brand */}
-          <div className="col-span-2 md:col-span-3 lg:col-span-2">
+          <div className="col-span-2 sm:col-span-2 md:col-span-3 lg:col-span-2">
             <Link href="/" className="flex items-center gap-3 group mb-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30">
-                <span className="text-2xl">🚤</span>
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-linear-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30">
+                <Ship className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold text-white">{t('brand.name')}</span>
+                <span className="text-xl font-bold font-heading text-white">{t('brand.name')}</span>
                 <span className="text-xs text-slate-500 font-medium tracking-wider uppercase">
                   {t('brand.tagline')}
                 </span>
@@ -203,13 +204,13 @@ export function Footer() {
             </ul>
           </div>
         </div>
-      </div>
+      </Container>
 
       {/* Bottom Bar */}
       <div className="relative border-t border-slate-800">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-slate-500">
+        <Container className="py-5 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs sm:text-sm text-slate-500 text-center sm:text-left">
               © {currentYear} {t('brand.name')}. {t('copyright')}
             </p>
             
@@ -219,7 +220,7 @@ export function Footer() {
                 <a
                   key={social.name}
                   href={social.href}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 hover:text-cyan-400 transition-all duration-200"
+                  className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 hover:text-cyan-400 transition-all duration-200"
                   aria-label={social.name}
                 >
                   <social.icon className="w-4 h-4" />
@@ -227,14 +228,14 @@ export function Footer() {
               ))}
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-slate-500">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500">
               <span>{t('madeWith')}</span>
               <span className="text-red-500">❤️</span>
               <span>{t('inIndonesia')}</span>
               <span className="text-lg">🇮🇩</span>
             </div>
           </div>
-        </div>
+        </Container>
       </div>
     </footer>
   );

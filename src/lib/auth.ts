@@ -17,7 +17,7 @@ import {
   checkRateLimit, 
   RATE_LIMITS,
   resetRateLimit 
-} from "./rate-limit";
+} from "./rate-limit-edge";
 
 /**
  * NextAuth.js v5 Configuration

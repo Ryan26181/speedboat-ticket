@@ -21,6 +21,7 @@ import { z } from "zod";
  */
 const createPaymentSchema = z.object({
   bookingId: z.string().cuid("Invalid booking ID"),
+  forceNewToken: z.boolean().optional().default(false),
 });
 
 /**
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { bookingId } = validation.data;
+    const { bookingId, forceNewToken } = validation.data;
 
     // Get booking with user info
     const booking = await prisma.booking.findUnique({
@@ -100,26 +101,36 @@ export async function POST(request: NextRequest) {
 
     // Check if payment already exists
     if (booking.payment) {
-      // If existing payment is still pending, return it
-      if (booking.payment.status === "PENDING") {
-        // Check if Midtrans payment has expired
-        if (new Date() < booking.payment.expiredAt) {
+      // If already paid, reject
+      if (booking.payment.status === "SUCCESS") {
+        throw new ConflictError("Booking has already been paid");
+      }
+      
+      // If existing payment is still pending and valid, and not forcing new token
+      if (booking.payment.status === "PENDING" && !forceNewToken) {
+        // Check if Midtrans payment token is still valid
+        if (
+          booking.payment.expiredAt && 
+          new Date() < booking.payment.expiredAt &&
+          booking.payment.midtransToken
+        ) {
           return successResponse({
             paymentId: booking.payment.id,
             orderId: booking.payment.orderId,
-            snapToken: null, // Token already used
-            redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${booking.id}/payment`,
+            snapToken: booking.payment.midtransToken,
+            redirectUrl: booking.payment.midtransRedirectUrl || `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${booking.id}/payment`,
             message: "Payment already initiated. Please complete your payment.",
           });
         }
-        // Payment expired, we can create a new one
-      } else if (booking.payment.status === "SUCCESS") {
-        throw new ConflictError("Booking has already been paid");
+        // Token expired or missing, will create a new one below
       }
+      // If forceNewToken is true, we continue to create a new token with new order ID
     }
 
-    // Generate unique order ID
-    const orderId = generateOrderId(booking.bookingCode);
+    // Generate unique order ID (with timestamp suffix when forcing new token to avoid "order_id already used" error)
+    const orderId = forceNewToken 
+      ? `${booking.bookingCode}-${Date.now()}`
+      : generateOrderId(booking.bookingCode);
 
     // Calculate expiry (sync with booking expiry, max 15 minutes)
     const now = new Date();
@@ -165,7 +176,7 @@ export async function POST(request: NextRequest) {
     const paymentExpiry = new Date();
     paymentExpiry.setMinutes(paymentExpiry.getMinutes() + expiryMinutes);
 
-    // Create or update payment record
+    // Create or update payment record (save the Snap token for reuse)
     const payment = await prisma.payment.upsert({
       where: { bookingId },
       update: {
@@ -173,6 +184,8 @@ export async function POST(request: NextRequest) {
         amount: booking.totalAmount,
         status: "PENDING",
         expiredAt: paymentExpiry,
+        midtransToken: snapResponse.token,
+        midtransRedirectUrl: snapResponse.redirect_url,
         rawResponse: snapResponse as object,
       },
       create: {
@@ -181,6 +194,8 @@ export async function POST(request: NextRequest) {
         amount: booking.totalAmount,
         status: "PENDING",
         expiredAt: paymentExpiry,
+        midtransToken: snapResponse.token,
+        midtransRedirectUrl: snapResponse.redirect_url,
         rawResponse: snapResponse as object,
       },
     });
