@@ -12,6 +12,8 @@ import {
   NotFoundError,
 } from "@/lib/api-utils";
 import { createScheduleSchema } from "@/validations/schedule";
+import { scheduleCache, CACHE_TTL, invalidateAllScheduleCaches } from "@/lib/cache";
+import { API_CACHE_CONFIG, buildCacheKeyFromParams } from "@/lib/cache-headers";
 import type { ScheduleStatus } from "@prisma/client";
 
 const VALID_STATUSES: ScheduleStatus[] = ["SCHEDULED", "BOARDING", "DEPARTED", "ARRIVED", "CANCELLED"];
@@ -20,6 +22,7 @@ const VALID_STATUSES: ScheduleStatus[] = ["SCHEDULED", "BOARDING", "DEPARTED", "
  * GET /api/schedules
  * Get paginated list of schedules with full relations
  * Public access (but filters by SCHEDULED status for public)
+ * Cached for 2 minutes
  */
 export async function GET(request: NextRequest) {
   try {
@@ -30,6 +33,25 @@ export async function GET(request: NextRequest) {
     const arrivalPortId = searchParams.get("arrivalPortId");
     const date = searchParams.get("date"); // Format: YYYY-MM-DD
     const showAll = searchParams.get("showAll") === "true"; // Admin flag
+
+    // Build cache key from params
+    const cacheKey = `list:${buildCacheKeyFromParams(searchParams)}`;
+    
+    // Try to get from cache (skip for admin showAll requests)
+    if (!showAll) {
+      const cached = await scheduleCache.get(cacheKey);
+      if (cached) {
+        const response = new Response(JSON.stringify(cached), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Cache': 'HIT',
+            ...API_CACHE_CONFIG.schedules.list,
+          },
+        });
+        return response;
+      }
+    }
 
     // Build where clause
     const where: Record<string, unknown> = {};
@@ -119,7 +141,25 @@ export async function GET(request: NextRequest) {
       prisma.schedule.count({ where }),
     ]);
 
-    return paginatedResponse(schedules, total, page, limit);
+    const responseData = {
+      data: schedules,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    };
+
+    // Cache the result (only for public non-admin requests)
+    if (!showAll) {
+      await scheduleCache.set(cacheKey, responseData, CACHE_TTL.MEDIUM);
+    }
+
+    const response = new Response(JSON.stringify(responseData), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Cache': 'MISS',
+        ...API_CACHE_CONFIG.schedules.list,
+      },
+    });
+    return response;
   } catch (error) {
     return handleApiError(error, "GET_SCHEDULES");
   }
@@ -250,6 +290,9 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Invalidate schedule caches after creation
+    await invalidateAllScheduleCaches();
 
     return successResponse(schedule, "Schedule created successfully", 201);
   } catch (error) {

@@ -12,6 +12,8 @@ import {
   ConflictError,
 } from "@/lib/api-utils";
 import { createRouteSchema } from "@/validations/route";
+import { routeCache, CACHE_TTL, invalidateAllRouteCaches } from "@/lib/cache";
+import { API_CACHE_CONFIG, buildCacheKeyFromParams } from "@/lib/cache-headers";
 import type { RouteStatus } from "@prisma/client";
 
 const VALID_STATUSES: RouteStatus[] = ["ACTIVE", "INACTIVE"];
@@ -19,7 +21,7 @@ const VALID_STATUSES: RouteStatus[] = ["ACTIVE", "INACTIVE"];
 /**
  * GET /api/routes
  * Get paginated list of routes with port details
- * Public access
+ * Public access - Cached for 1 hour
  */
 export async function GET(request: NextRequest) {
   try {
@@ -29,6 +31,23 @@ export async function GET(request: NextRequest) {
     const status = parseStatusParam(searchParams, VALID_STATUSES);
     const departurePortId = searchParams.get("departurePortId");
     const arrivalPortId = searchParams.get("arrivalPortId");
+
+    // Build cache key from params
+    const cacheKey = `list:${buildCacheKeyFromParams(searchParams)}`;
+    
+    // Try to get from cache
+    const cached = await routeCache.get(cacheKey);
+    if (cached) {
+      const response = new Response(JSON.stringify(cached), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Cache': 'HIT',
+          ...API_CACHE_CONFIG.routes.list,
+        },
+      });
+      return response;
+    }
 
     // Build where clause
     const where = {
@@ -88,7 +107,23 @@ export async function GET(request: NextRequest) {
       prisma.route.count({ where }),
     ]);
 
-    return paginatedResponse(routes, total, page, limit);
+    const responseData = {
+      data: routes,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    };
+
+    // Cache the result
+    await routeCache.set(cacheKey, responseData, CACHE_TTL.EXTENDED);
+
+    const response = new Response(JSON.stringify(responseData), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Cache': 'MISS',
+        ...API_CACHE_CONFIG.routes.list,
+      },
+    });
+    return response;
   } catch (error) {
     return handleApiError(error, "GET_ROUTES");
   }
@@ -169,6 +204,9 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Invalidate route caches after creation
+    await invalidateAllRouteCaches();
 
     return successResponse(route, "Route created successfully", 201);
   } catch (error) {

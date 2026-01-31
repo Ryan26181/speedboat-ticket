@@ -3,10 +3,77 @@ import { getRedisConnection } from './queue/connection';
 import { logger } from './logger';
 
 // ============================================
+// TYPED CACHE KEYS
+// ============================================
+
+export const CACHE_KEYS = {
+  // Schedule caching
+  schedules: {
+    list: (params: string) => `schedules:list:${params}`,
+    detail: (id: string) => `schedules:detail:${id}`,
+    availability: (id: string) => `schedules:seats:${id}`,
+    byDate: (date: string) => `schedules:date:${date}`,
+  },
+  // Route caching
+  routes: {
+    list: (params: string) => `routes:list:${params}`,
+    detail: (id: string) => `routes:detail:${id}`,
+    active: () => 'routes:active',
+  },
+  // Port caching
+  ports: {
+    list: () => 'ports:list',
+    detail: (id: string) => `ports:detail:${id}`,
+    active: () => 'ports:active',
+  },
+  // Ship caching
+  ships: {
+    list: () => 'ships:list',
+    detail: (id: string) => `ships:detail:${id}`,
+    active: () => 'ships:active',
+  },
+  // Booking caching
+  bookings: {
+    status: (code: string) => `bookings:status:${code}`,
+    detail: (id: string) => `bookings:detail:${id}`,
+    user: (userId: string) => `bookings:user:${userId}`,
+  },
+  // Payment caching
+  payments: {
+    status: (orderId: string) => `payments:status:${orderId}`,
+    pending: (bookingId: string) => `payments:pending:${bookingId}`,
+  },
+  // User/session caching
+  users: {
+    session: (userId: string) => `users:session:${userId}`,
+    profile: (userId: string) => `users:profile:${userId}`,
+  },
+} as const;
+
+// ============================================
+// CACHE TTL PRESETS (in seconds)
+// ============================================
+
+export const CACHE_TTL = {
+  // Short-lived (real-time data)
+  REALTIME: 15,           // 15 seconds - availability, status
+  SHORT: 30,              // 30 seconds - frequently changing data
+  
+  // Medium-lived (semi-static data)
+  MEDIUM: 120,            // 2 minutes - schedules list
+  STANDARD: 300,          // 5 minutes - default
+  
+  // Long-lived (static data)
+  LONG: 900,              // 15 minutes - routes, ports
+  EXTENDED: 3600,         // 1 hour - rarely changing data
+  DAY: 86400,             // 24 hours - static reference data
+} as const;
+
+// ============================================
 // CACHE WRAPPER
 // ============================================
 
-const DEFAULT_TTL = 300; // 5 minutes
+const DEFAULT_TTL = CACHE_TTL.STANDARD;
 const KEY_PREFIX = 'speedboat:';
 
 export class CacheService {
@@ -153,6 +220,64 @@ export class CacheService {
 export const paymentCache = new CacheService('speedboat:payment:');
 export const bookingCache = new CacheService('speedboat:booking:');
 export const scheduleCache = new CacheService('speedboat:schedule:');
+export const routeCache = new CacheService('speedboat:route:');
+export const portCache = new CacheService('speedboat:port:');
+export const shipCache = new CacheService('speedboat:ship:');
+
+// Default cache instance for general use
+export const cache = new CacheService();
+
+// ============================================
+// CACHE INVALIDATION HELPERS
+// ============================================
+
+/**
+ * Invalidate all schedule-related caches
+ */
+export async function invalidateAllScheduleCaches(): Promise<void> {
+  await scheduleCache.deleteByPattern('*');
+  logger.info('[CACHE] Invalidated all schedule caches');
+}
+
+/**
+ * Invalidate all route-related caches
+ */
+export async function invalidateAllRouteCaches(): Promise<void> {
+  await routeCache.deleteByPattern('*');
+  logger.info('[CACHE] Invalidated all route caches');
+}
+
+/**
+ * Invalidate all port-related caches
+ */
+export async function invalidateAllPortCaches(): Promise<void> {
+  await portCache.deleteByPattern('*');
+  logger.info('[CACHE] Invalidated all port caches');
+}
+
+/**
+ * Invalidate caches related to a specific schedule
+ */
+export async function invalidateScheduleById(scheduleId: string): Promise<void> {
+  await Promise.all([
+    scheduleCache.delete(`detail:${scheduleId}`),
+    scheduleCache.delete(`seats:${scheduleId}`),
+    scheduleCache.deleteByPattern('list:*'), // Invalidate all list caches
+  ]);
+  logger.info('[CACHE] Invalidated schedule caches', { scheduleId });
+}
+
+/**
+ * Invalidate caches related to a specific route
+ */
+export async function invalidateRouteById(routeId: string): Promise<void> {
+  await Promise.all([
+    routeCache.delete(`detail:${routeId}`),
+    routeCache.deleteByPattern('list:*'),
+    routeCache.delete('active'),
+  ]);
+  logger.info('[CACHE] Invalidated route caches', { routeId });
+}
 
 // ============================================
 // CACHE HELPERS

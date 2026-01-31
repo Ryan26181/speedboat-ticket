@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys, STALE_TIMES, GC_TIMES } from "@/lib/query-client";
 
 // Types
 interface Schedule {
@@ -141,8 +142,10 @@ async function deleteSchedule(id: string): Promise<void> {
  */
 export function useSchedules(params?: ScheduleParams) {
   return useQuery({
-    queryKey: ["schedules", params],
+    queryKey: queryKeys.schedules.list(params ?? {}),
     queryFn: () => fetchSchedules(params),
+    staleTime: STALE_TIMES.schedules,
+    gcTime: GC_TIMES.medium,
   });
 }
 
@@ -155,7 +158,7 @@ export function useSearchSchedules(params: {
   date: string;
 }) {
   return useQuery({
-    queryKey: ["schedules", "search", params],
+    queryKey: queryKeys.schedules.list({ search: true, ...params }),
     queryFn: async () => {
       const searchParams = new URLSearchParams({
         departurePortId: params.departurePortId,
@@ -168,6 +171,8 @@ export function useSearchSchedules(params: {
       return response.json() as Promise<Schedule[]>;
     },
     enabled: !!params.departurePortId && !!params.arrivalPortId && !!params.date,
+    staleTime: STALE_TIMES.availability, // Short stale time for availability
+    gcTime: GC_TIMES.short,
   });
 }
 
@@ -176,9 +181,11 @@ export function useSearchSchedules(params: {
  */
 export function useSchedule(id: string) {
   return useQuery({
-    queryKey: ["schedules", id],
+    queryKey: queryKeys.schedules.detail(id),
     queryFn: () => fetchSchedule(id),
     enabled: !!id,
+    staleTime: STALE_TIMES.schedules,
+    gcTime: GC_TIMES.medium,
   });
 }
 
@@ -191,7 +198,7 @@ export function useCreateSchedule() {
   return useMutation({
     mutationFn: createSchedule,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
     },
   });
 }
@@ -205,8 +212,8 @@ export function useUpdateSchedule() {
   return useMutation({
     mutationFn: updateSchedule,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
-      queryClient.setQueryData(["schedules", data.id], data);
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
+      queryClient.setQueryData(queryKeys.schedules.detail(data.id), data);
     },
   });
 }
@@ -220,7 +227,7 @@ export function useDeleteSchedule() {
   return useMutation({
     mutationFn: deleteSchedule,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
     },
   });
 }
