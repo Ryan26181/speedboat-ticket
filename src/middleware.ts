@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { routing } from '@/i18n/routing';
 import { auth } from '@/lib/auth';
+import { rateLimitMiddleware } from '@/middleware/rate-limit';
+import { requestSizeMiddleware } from '@/middleware/request-size';
+import { csrfMiddleware, setCsrfCookie } from '@/middleware/csrf';
 
 // Create next-intl middleware
 const intlMiddleware = createMiddleware(routing);
@@ -22,15 +25,50 @@ const operatorRoutes = ['/operator'];
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Skip middleware for API routes and static files
+  // Skip middleware for static files
   if (
-    pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname.includes('.') ||
     pathname.startsWith('/favicon')
   ) {
     return NextResponse.next();
   }
+
+  // ============================================
+  // API ROUTE SECURITY
+  // ============================================
+  if (pathname.startsWith('/api/')) {
+    // 1. Request size limiting
+    const sizeCheck = requestSizeMiddleware(request);
+    if (sizeCheck) return sizeCheck;
+    
+    // 2. Rate limiting
+    const rateCheck = rateLimitMiddleware(request);
+    if (rateCheck) return rateCheck;
+    
+    // 3. CSRF validation (skip webhooks and auth routes)
+    if (!pathname.includes('/webhook') && 
+        !pathname.includes('/notification') &&
+        !pathname.includes('/cron') &&
+        !pathname.startsWith('/api/auth/') &&
+        !pathname.startsWith('/api/csrf')) {
+      const csrfCheck = await csrfMiddleware(request);
+      if (csrfCheck) return csrfCheck;
+    }
+    
+    // Add security headers to API responses
+    const response = NextResponse.next();
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    
+    return response;
+  }
+
+  // ============================================
+  // PAGE ROUTE HANDLING
+  // ============================================
 
   // First, handle i18n routing
   const response = intlMiddleware(request);
@@ -92,9 +130,25 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/user`, request.url));
   }
 
-  return response;
+  // ============================================
+  // SET CSRF COOKIE FOR PAGES
+  // ============================================
+  const finalResponse = response || NextResponse.next();
+  
+  // Set CSRF cookie if not present
+  if (!request.cookies.get('csrf_token')) {
+    setCsrfCookie(finalResponse);
+  }
+  
+  // Add security headers to page responses
+  finalResponse.headers.set('X-Content-Type-Options', 'nosniff');
+  finalResponse.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  finalResponse.headers.set('X-XSS-Protection', '1; mode=block');
+  finalResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  return finalResponse;
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|.*\\..*).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 };
