@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import { WebVitalsProvider } from "@/lib/web-vitals";
 
 // Optimize font loading - only load essential weights
 const poppins = Poppins({
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} font-sans antialiased min-h-screen bg-background overflow-x-hidden`}
       >
+        <WebVitalsProvider />
         {children}
       </body>
     </html>

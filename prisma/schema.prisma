@@ -320,6 +320,10 @@ model Port {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // ===== Optimized indexes =====
+  @@index([city])
+  @@index([province])
+  @@index([name])
   @@map("ports")
 }
 
@@ -340,7 +344,11 @@ model Route {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // ===== Optimized indexes =====
   @@unique([departurePortId, arrivalPortId])
+  @@index([status])
+  @@index([departurePortId, status])
+  @@index([arrivalPortId, status])
   @@map("routes")
 }
 
@@ -421,6 +429,9 @@ model Passenger {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // ===== Optimized indexes =====
+  @@index([bookingId])
+  @@index([identityNumber])
   @@map("passengers")
 }
 
