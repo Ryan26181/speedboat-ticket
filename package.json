@@ -73,6 +73,7 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.1.6",
     "@tailwindcss/postcss": "^4",
     "@tanstack/react-query-devtools": "^5.90.20",
     "@types/bcryptjs": "^2.4.6",

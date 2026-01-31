@@ -100,11 +100,31 @@ export function usePorts(params?: PortParams) {
   return useQuery({
     queryKey: ["ports", params],
     queryFn: () => fetchPorts(params),
+    staleTime: 2 * 60 * 1000, // 2 minutes - port data rarely changes
+  });
+}
+
+/**
+ * Hook to fetch all ports for dropdowns (heavily cached)
+ * Uses limit=-1 to get all ports in single request
+ */
+export function useAllPorts() {
+  return useQuery({
+    queryKey: ["ports", "all"],
+    queryFn: async () => {
+      const response = await fetch("/api/ports?limit=-1");
+      if (!response.ok) throw new Error("Failed to fetch ports");
+      const data = await response.json();
+      return data.data as Port[];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes - ports rarely change
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 }
 
 /**
  * Hook to fetch all active ports (for dropdowns)
+ * @deprecated Use useAllPorts instead for better caching
  */
 export function useActivePorts() {
   return useQuery({
@@ -115,6 +135,7 @@ export function useActivePorts() {
       const data = await response.json();
       return data.ports as Port[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 

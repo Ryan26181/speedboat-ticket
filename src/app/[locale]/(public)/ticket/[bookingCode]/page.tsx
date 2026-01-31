@@ -357,14 +357,7 @@ export default function TicketPage({ params }: { params: Promise<{ bookingCode: 
               <div className="space-y-4">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Passenger</p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-lg">{selectedTicket?.passenger.name}</p>
-                    {selectedTicket?.passenger.category && (
-                      <Badge variant="outline" className="text-xs">
-                        {CATEGORY_LABELS[selectedTicket.passenger.category]?.label || selectedTicket.passenger.category}
-                      </Badge>
-                    )}
-                  </div>
+                  <p className="font-semibold text-lg">{selectedTicket?.passenger.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {selectedTicket?.passenger.identityType.replace("_", " ")} -{" "}
                     {selectedTicket?.passenger.identityNumber}

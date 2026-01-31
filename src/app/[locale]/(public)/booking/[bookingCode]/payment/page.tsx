@@ -219,19 +219,9 @@ export default async function PaymentPage({ params }: PaymentPageProps) {
                             {index + 1}
                           </div>
                           <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm sm:text-base truncate">
-                                {passenger.name}
-                              </p>
-                              {passenger.category && (
-                                <Badge variant="outline" className="text-[10px] sm:text-xs shrink-0">
-                                  {passenger.category === "ADULT" ? "Dewasa" :
-                                   passenger.category === "ELDERLY" ? "Lansia" :
-                                   passenger.category === "CHILD" ? "Anak" :
-                                   passenger.category === "INFANT" ? "Bayi" : passenger.category}
-                                </Badge>
-                              )}
-                            </div>
+                            <p className="font-medium text-sm sm:text-base truncate">
+                              {passenger.name}
+                            </p>
                             <p className="text-[10px] sm:text-xs text-gray-500">
                               {passenger.identityType}: {passenger.identityNumber}
                             </p>

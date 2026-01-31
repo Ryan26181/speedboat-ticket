@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 /**
- * Identity type enum
+ * Identity type enum - matches Prisma IdentityType enum
  */
-const identityTypeEnum = z.enum(["NATIONAL_ID", "PASSPORT", "DRIVERS_LICENSE", "KTP"], {
+const identityTypeEnum = z.enum(["NATIONAL_ID", "PASSPORT", "DRIVERS_LICENSE"], {
   error: "Please select a valid identity type",
 });
 

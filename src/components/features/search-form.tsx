@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { useAllPorts } from "@/hooks/use-ports";
 
 // Search form schema
 const searchSchema = z.object({
@@ -53,8 +54,9 @@ interface SearchFormProps {
 
 export function SearchForm({ variant = "hero", className, defaultValues }: SearchFormProps) {
   const router = useRouter();
-  const [ports, setPorts] = useState<Port[]>([]);
-  const [isLoadingPorts, setIsLoadingPorts] = useState(true);
+  
+  // Use React Query for cached port data (5 min stale time)
+  const { data: ports = [], isLoading: isLoadingPorts } = useAllPorts();
 
   const {
     register,
@@ -76,24 +78,6 @@ export function SearchForm({ variant = "hero", className, defaultValues }: Searc
   const arrivalPortId = watch("arrivalPortId");
   const selectedDate = watch("date");
   const passengers = watch("passengers");
-
-  // Fetch ports on mount
-  useEffect(() => {
-    async function fetchPorts() {
-      try {
-        const res = await fetch("/api/ports?limit=-1&status=ACTIVE");
-        const data = await res.json();
-        if (data.success) {
-          setPorts(data.data || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch ports:", error);
-      } finally {
-        setIsLoadingPorts(false);
-      }
-    }
-    fetchPorts();
-  }, []);
 
   const onSubmit = (data: SearchFormData) => {
     const searchParams = new URLSearchParams({

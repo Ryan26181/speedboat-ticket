@@ -9,11 +9,13 @@ import {
   ConflictError,
 } from "@/lib/api-utils";
 import { createPortSchema } from "@/validations/port";
+import { memoryCache, CACHE_KEYS, CACHE_TTL } from "@/lib/memory-cache";
 
 /**
  * GET /api/ports
  * Get paginated list of ports
  * Public access (for search/dropdowns)
+ * OPTIMIZED: Uses in-memory caching for frequent requests
  */
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +35,34 @@ export async function GET(request: NextRequest) {
         }
       : {};
 
-    // If limit is -1, return all ports (useful for dropdowns)
+    // If limit is -1, return all ports (useful for dropdowns) - CACHED
+    if (limitParam === "-1" && !search) {
+      const ports = await memoryCache.getOrSet(
+        CACHE_KEYS.PORTS_ALL,
+        async () => {
+          const allPorts = await prisma.port.findMany({
+            where: {},
+            orderBy: { name: "asc" },
+            include: {
+              _count: {
+                select: {
+                  departureRoutes: true,
+                  arrivalRoutes: true,
+                },
+              },
+            },
+          });
+          return allPorts.map((port) => ({
+            ...port,
+            routesCount: port._count.departureRoutes + port._count.arrivalRoutes,
+          }));
+        },
+        CACHE_TTL.PORTS
+      );
+      return successResponse(ports);
+    }
+
+    // Non-cached path for search/pagination
     if (limitParam === "-1") {
       const ports = await prisma.port.findMany({
         where,
@@ -48,7 +77,6 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      // Add computed routesCount
       const portsWithCount = ports.map((port) => ({
         ...port,
         routesCount: port._count.departureRoutes + port._count.arrivalRoutes,

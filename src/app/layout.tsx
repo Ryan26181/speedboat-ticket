@@ -2,11 +2,13 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 
+// Optimize font loading - only load essential weights
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
   display: "swap",
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"], // Reduced from 7 to 4 weights for faster loading
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -16,6 +18,8 @@ export const metadata: Metadata = {
   },
   description:
     "Book speedboat tickets for inter-island travel. Fast, secure, and convenient booking for your sea travel needs.",
+  // Add metadataBase for better SEO
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://speedboat-ticket.com'),
 };
 
 export const viewport: Viewport = {
@@ -35,6 +39,11 @@ export default function RootLayout({
 }) {
   return (
     <html suppressHydrationWarning className="overflow-x-hidden">
+      <head>
+        {/* DNS prefetch and preconnect for faster external resources */}
+        <link rel="dns-prefetch" href="https://app.sandbox.midtrans.com" />
+        <link rel="preconnect" href="https://app.sandbox.midtrans.com" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${poppins.variable} font-sans antialiased min-h-screen bg-background overflow-x-hidden`}
       >
