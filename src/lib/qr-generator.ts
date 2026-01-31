@@ -1,4 +1,12 @@
 import QRCode from "qrcode";
+import { createHmac } from "crypto";
+
+/**
+ * QR Code HMAC Secret
+ * Used to sign QR codes to prevent tampering
+ * MUST be set in production environment
+ */
+const QR_HMAC_SECRET = process.env.QR_HMAC_SECRET || "dev-qr-secret-change-in-production";
 
 /**
  * Data structure for ticket QR code
@@ -10,6 +18,19 @@ export interface TicketQRData {
   scheduleId: string;
   departureTime: string;
   version: number;
+}
+
+/**
+ * Data structure with signature (internal use)
+ */
+interface SignedPayload {
+  t: string;  // ticketCode
+  b: string;  // bookingCode
+  p: string;  // passengerName
+  s: string;  // scheduleId
+  d: string;  // departureTime
+  v: number;  // version
+  sig: string; // HMAC signature
 }
 
 /**
@@ -91,17 +112,55 @@ export async function generateQRSVG(
 }
 
 /**
- * Encode QR data to string
+ * Generate HMAC signature for QR payload
+ * Creates a SHA-256 HMAC of the essential ticket data
+ */
+function generateQRSignature(data: TicketQRData): string {
+  // Create deterministic string from essential fields
+  const signatureData = `${data.ticketCode}|${data.bookingCode}|${data.scheduleId}|${data.departureTime}|${data.version}`;
+  
+  return createHmac("sha256", QR_HMAC_SECRET)
+    .update(signatureData)
+    .digest("base64")
+    .substring(0, 16); // Truncate to 16 chars to keep QR compact
+}
+
+/**
+ * Verify HMAC signature of QR data
+ * Returns true if signature is valid, false otherwise
+ */
+export function verifyQRSignature(data: TicketQRData, signature: string): boolean {
+  const expectedSignature = generateQRSignature(data);
+  
+  // Constant-time comparison to prevent timing attacks
+  if (signature.length !== expectedSignature.length) {
+    return false;
+  }
+  
+  let result = 0;
+  for (let i = 0; i < signature.length; i++) {
+    result |= signature.charCodeAt(i) ^ expectedSignature.charCodeAt(i);
+  }
+  
+  return result === 0;
+}
+
+/**
+ * Encode QR data to string with HMAC signature
  * Uses a compact format: SPB:{base64}
+ * The payload includes an HMAC signature to prevent tampering
  */
 export function encodeQRData(data: TicketQRData): string {
-  const payload = {
+  const signature = generateQRSignature(data);
+  
+  const payload: SignedPayload = {
     t: data.ticketCode,
     b: data.bookingCode,
     p: data.passengerName,
     s: data.scheduleId,
     d: data.departureTime,
     v: data.version || 1,
+    sig: signature,
   };
 
   const jsonStr = JSON.stringify(payload);
@@ -111,17 +170,21 @@ export function encodeQRData(data: TicketQRData): string {
 }
 
 /**
- * Decode QR data from string
+ * Decode QR data from string and verify signature
+ * Returns null if invalid or signature verification fails
+ * 
+ * @param qrString - The QR code string to decode
+ * @param validateSignature - Whether to verify HMAC signature (default: true)
  */
-export function decodeQRData(qrString: string): TicketQRData | null {
+export function decodeQRData(qrString: string, validateSignature = true): TicketQRData | null {
   try {
     // Check for SPB prefix (our format)
     if (qrString.startsWith("SPB:")) {
       const base64 = qrString.substring(4);
       const jsonStr = Buffer.from(base64, "base64").toString("utf-8");
-      const payload = JSON.parse(jsonStr);
+      const payload = JSON.parse(jsonStr) as SignedPayload;
 
-      return {
+      const data: TicketQRData = {
         ticketCode: payload.t,
         bookingCode: payload.b,
         passengerName: payload.p,
@@ -129,9 +192,24 @@ export function decodeQRData(qrString: string): TicketQRData | null {
         departureTime: payload.d,
         version: payload.v || 1,
       };
+      
+      // Verify HMAC signature if present and validation is enabled
+      if (validateSignature && payload.sig) {
+        if (!verifyQRSignature(data, payload.sig)) {
+          console.warn("[QR_SIGNATURE_INVALID]", { ticketCode: data.ticketCode });
+          return null; // Invalid signature - tampered QR code
+        }
+      } else if (validateSignature && !payload.sig) {
+        // Modern QR codes should have signatures
+        // Allow legacy codes without signatures in non-strict mode
+        console.warn("[QR_SIGNATURE_MISSING]", { ticketCode: data.ticketCode });
+        // Return data but log warning - can enable strict mode later
+      }
+
+      return data;
     }
 
-    // Try parsing as plain JSON (legacy format)
+    // Try parsing as plain JSON (legacy format - no signature validation)
     const data = JSON.parse(qrString);
     return {
       ticketCode: data.ticketCode || data.t,

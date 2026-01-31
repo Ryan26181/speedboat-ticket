@@ -3,8 +3,15 @@ import { z } from "zod";
 /**
  * Identity type enum
  */
-const identityTypeEnum = z.enum(["NATIONAL_ID", "PASSPORT", "DRIVERS_LICENSE"], {
+const identityTypeEnum = z.enum(["NATIONAL_ID", "PASSPORT", "DRIVERS_LICENSE", "KTP"], {
   error: "Please select a valid identity type",
+});
+
+/**
+ * Passenger category enum
+ */
+const passengerCategoryEnum = z.enum(["ADULT", "ELDERLY", "CHILD", "INFANT"], {
+  error: "Please select a valid passenger category",
 });
 
 /**
@@ -21,6 +28,21 @@ const bookingStatusEnum = z.enum(
  * Indonesian phone number regex
  */
 const phoneRegex = /^(\+62|62|0)[0-9]{9,12}$/;
+
+/**
+ * Passenger counts schema
+ */
+export const passengerCountsSchema = z.object({
+  adults: z.number().min(0).max(20),
+  elderly: z.number().min(0).max(20),
+  children: z.number().min(0).max(20),
+  infants: z.number().min(0).max(10),
+}).refine((data) => {
+  // At least 1 adult OR 1 elderly required
+  return data.adults >= 1 || data.elderly >= 1;
+}, {
+  message: "Minimal harus ada 1 penumpang dewasa atau lansia",
+});
 
 /**
  * Passenger schema
@@ -44,6 +66,8 @@ export const passengerSchema = z.object({
     .regex(phoneRegex, "Please enter a valid Indonesian phone number")
     .optional()
     .or(z.literal("")),
+  category: passengerCategoryEnum.default("ADULT"),
+  dateOfBirth: z.coerce.date().optional(),
 });
 
 /**
@@ -57,6 +81,8 @@ export const createBookingSchema = z.object({
     .array(passengerSchema)
     .min(1, "At least 1 passenger is required")
     .max(50, "Maximum 50 passengers per booking"),
+  // Passenger counts for validation
+  passengerCounts: passengerCountsSchema.optional(),
 });
 
 /**

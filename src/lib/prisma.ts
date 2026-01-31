@@ -36,7 +36,6 @@ function createPrismaClient(): PrismaClient {
 
   // Query logging in development - log slow queries
   if (process.env.NODE_ENV === 'development') {
-    // @ts-expect-error - Prisma event typing
     client.$on('query', (e: { query: string; duration: number; params: string }) => {
       if (e.duration > 100) {
         console.warn('[SLOW_QUERY]', {

@@ -297,6 +297,21 @@ export type BookingWithPayment = Prisma.BookingGetPayload<{
 // ==================== Passenger Types ====================
 
 /**
+ * Passenger category type
+ */
+export type PassengerCategory = "ADULT" | "ELDERLY" | "CHILD" | "INFANT";
+
+/**
+ * Passenger counts by category
+ */
+export interface PassengerCounts {
+  adults: number;    // ADULT - Dewasa (5+ years)
+  elderly: number;   // ELDERLY - Lansia (60+ years)
+  children: number;  // CHILD - Anak (2-5 years)
+  infants: number;   // INFANT - Bayi (under 2 years)
+}
+
+/**
  * Passenger with ticket
  */
 export type PassengerWithTicket = Prisma.PassengerGetPayload<{

@@ -207,9 +207,9 @@
   --radius-4xl: calc(var(--radius) + 16px);
 
   /* Fonts */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-plus-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-plus-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   /* Box Shadows */
@@ -241,6 +241,25 @@
 }
 
 /* ===== Base Styles ===== */
+html {
+  /* Prevent layout shift when scrollbar appears/disappears (modal/dropdown) */
+  overflow-y: scroll !important;
+}
+
+/* Prevent body scroll lock from causing layout shift */
+body {
+  overflow-y: scroll !important;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* When Radix adds data-scroll-locked, keep scrollbar space */
+body[data-scroll-locked] {
+  overflow-y: scroll !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
+
 * {
   border-color: hsl(var(--border));
 }
@@ -280,23 +299,58 @@ h6 { font-size: 1rem; }
 }
 
 /* ===== Scrollbar Styles ===== */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.25) hsl(var(--muted) / 0.5);
+}
+
+/* Chrome, Safari, Edge */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-  border-radius: 4px;
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 4px;
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+/* Corner */
+::-webkit-scrollbar-corner {
+  background: hsl(var(--muted) / 0.3);
+}
+
+/* Hide scrollbar in dropdowns/popovers/select content */
+[data-radix-popper-content-wrapper],
+[data-radix-select-viewport],
+[data-radix-menu-content],
+[role="listbox"],
+[data-slot="select-content"] {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+[data-radix-popper-content-wrapper]::-webkit-scrollbar,
+[data-radix-popper-content-wrapper] *::-webkit-scrollbar,
+[data-radix-select-viewport]::-webkit-scrollbar,
+[data-radix-menu-content]::-webkit-scrollbar,
+[role="listbox"]::-webkit-scrollbar,
+[data-slot="select-content"]::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* ===== Focus Ring Utility ===== */
@@ -546,6 +600,13 @@ h6 { font-size: 1rem; }
   /* Prevent horizontal scroll */
   html, body {
     @apply overflow-x-hidden;
+    max-width: 100vw;
+  }
+  
+  /* Fix for viewport issues after mobile/desktop toggle */
+  #__next, [data-nextjs-scroll-focus-boundary] {
+    @apply overflow-x-hidden;
+    max-width: 100vw;
   }
   
   html {

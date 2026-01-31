@@ -138,15 +138,18 @@
       "tryAnother": "Coba email lain",
       "success": {
         "title": "Periksa email Anda",
-        "message": "Jika akun dengan email ini ada",
-        "instructions": "kami telah mengirim tautan reset kata sandi. Tautan akan kadaluarsa dalam 1 jam."
+        "message": "Jika akun dengan email ini ada, kami telah mengirim tautan reset kata sandi.",
+        "instructions": "kami telah mengirim tautan reset kata sandi. Tautan akan kadaluarsa dalam 1 jam.",
+        "notice": "Tautan reset akan kadaluarsa dalam 1 jam. Jika tidak melihat email, periksa folder spam Anda."
       }
     },
     "resetPassword": {
       "title": "Reset Kata Sandi",
       "subtitle": "Masukkan kata sandi baru Anda di bawah.",
       "newPassword": "Kata Sandi Baru",
+      "newPasswordPlaceholder": "Masukkan kata sandi baru",
       "confirmPassword": "Konfirmasi Kata Sandi Baru",
+      "confirmPasswordPlaceholder": "Konfirmasi kata sandi baru",
       "submit": "Reset Kata Sandi",
       "resetting": "Mereset...",
       "backToLogin": "Kembali ke Login",
@@ -513,7 +516,7 @@
     "help": "Pusat Bantuan",
     "terms": "Syarat Layanan",
     "privacy": "Kebijakan Privasi",
-    "copyright": "© {year} {appName}. Hak cipta dilindungi.",
+    "copyright": "Hak cipta dilindungi.",
     "links": {
       "explore": {
         "popularRoutes": "Rute Populer",
@@ -540,7 +543,6 @@
         "licenses": "Lisensi"
       }
     },
-    "copyright": "Hak cipta dilindungi.",
     "madeWith": "Dibuat dengan",
     "inIndonesia": "di Indonesia"
   },

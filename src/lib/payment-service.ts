@@ -8,8 +8,6 @@ import { format } from 'date-fns';
 import { 
   validateBookingTransition, 
   validatePaymentTransition,
-  getBookingStatusInfo,
-  getPaymentStatusInfo,
 } from './state-machine';
 import { getStatusMapping } from './webhook-status-handlers';
 
@@ -100,14 +98,16 @@ export async function createPayment(
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + expiryMinutes);
 
-    // Format expiry for Midtrans (YYYY-MM-DD HH:mm:ss +0700)
-    const expiryTime = format(expiresAt, "yyyy-MM-dd HH:mm:ss '+0700'");
-
     // Create Snap transaction parameters
     const snapParams = {
       transaction_details: {
         order_id: orderId,
         gross_amount: formatAmountForMidtrans(amount),
+      },
+      expiry: {
+        start_time: format(new Date(), "yyyy-MM-dd HH:mm:ss '+0700'"),
+        unit: 'minutes' as const,
+        duration: expiryMinutes,
       },
       customer_details: {
         first_name: customerName,
@@ -122,11 +122,6 @@ export async function createPayment(
           name: itemName.substring(0, 50), // Midtrans limits to 50 chars
         },
       ],
-      expiry: {
-        start_time: format(new Date(), "yyyy-MM-dd HH:mm:ss '+0700'"),
-        unit: 'minutes' as const,
-        duration: expiryMinutes,
-      },
       enabled_payments: getEnabledPaymentMethods(),
     };
 
@@ -239,7 +234,24 @@ export async function processNotificationSafe(
         return { success: false, error: 'Payment not found' };
       }
 
-      // 4. Check idempotency - has this webhook been processed?
+      // 4. AMOUNT RECONCILIATION CHECK (Security Enhancement)
+      // Verify webhook amount matches expected payment amount
+      const webhookAmount = parseFloat(gross_amount);
+      const expectedAmount = payment.amount;
+      const amountTolerance = 0.01; // Allow for rounding differences
+      
+      if (Math.abs(webhookAmount - expectedAmount) > amountTolerance) {
+        logger.error('[WEBHOOK_AMOUNT_MISMATCH]', {
+          requestId,
+          orderId: order_id,
+          expectedAmount,
+          webhookAmount,
+          difference: Math.abs(webhookAmount - expectedAmount),
+        });
+        return { success: false, error: 'Amount mismatch - potential tampering detected' };
+      }
+
+      // 5. Check idempotency - has this webhook been processed?
       const idempotencyKey = `${order_id}:${transaction_id}:${transaction_status}`;
       const processedWebhooks = payment.processedWebhooks || [];
       
@@ -248,7 +260,7 @@ export async function processNotificationSafe(
         return { success: true, skipped: true, reason: 'Already processed' };
       }
 
-      // 5. Use comprehensive status mapping from webhook-status-handlers
+      // 6. Use comprehensive status mapping from webhook-status-handlers
       const statusMapping = getStatusMapping(
         transaction_status,
         fraud_status,
@@ -295,13 +307,32 @@ export async function processNotificationSafe(
         return { success: true, skipped: true, reason: bookingTransition.error || 'Invalid booking transition' };
       }
 
-      // 7. Build payment update data
+      // 7. Build payment update data with SANITIZED payload (PCI compliance)
+      // Only store necessary fields, exclude customer PII from raw response
+      const sanitizedPayload = {
+        order_id: payload.order_id,
+        transaction_id: payload.transaction_id,
+        transaction_status: payload.transaction_status,
+        transaction_time: payload.transaction_time,
+        payment_type: payload.payment_type,
+        status_code: payload.status_code,
+        gross_amount: payload.gross_amount,
+        fraud_status: payload.fraud_status,
+        settlement_time: payload.settlement_time,
+        // VA numbers (partial - for reference)
+        va_numbers: payload.va_numbers?.map(va => ({ 
+          bank: va.bank, 
+          va_number: va.va_number?.slice(-4) ? `****${va.va_number.slice(-4)}` : undefined 
+        })),
+        // Exclude: customer_details, item_details, billing_address, shipping_address
+      };
+
       const paymentUpdateData: Prisma.PaymentUpdateInput = {
         status: paymentStatus,
         transactionId: transaction_id,
         transactionTime: transaction_time ? new Date(transaction_time) : undefined,
         paymentType: payment_type,
-        rawResponse: payload as unknown as Prisma.JsonObject,
+        rawResponse: sanitizedPayload as unknown as Prisma.JsonObject,
         processedWebhooks: {
           push: idempotencyKey,
         },

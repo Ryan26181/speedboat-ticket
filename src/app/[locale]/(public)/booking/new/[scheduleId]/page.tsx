@@ -92,12 +92,12 @@ export default function BookingPage({ params }: { params: Promise<{ scheduleId: 
   } = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      passengers: Array(passengersCount).fill({
+      passengers: Array.from({ length: passengersCount }, () => ({
         name: "",
-        identityType: "NATIONAL_ID",
+        identityType: "NATIONAL_ID" as const,
         identityNumber: "",
         phone: "",
-      }),
+      })),
     },
   });
 

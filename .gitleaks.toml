@@ -1,0 +1,88 @@
+# Gitleaks configuration for secret scanning
+title = "Speedboat Ticket Gitleaks Config"
+
+[allowlist]
+description = "Allowlisted patterns"
+paths = [
+  '''node_modules''',
+  '''\.next''',
+  '''coverage''',
+  '''\.git''',
+  '''package-lock\.json''',
+  '''pnpm-lock\.yaml''',
+]
+regexes = [
+  '''sk_test_[a-zA-Z0-9]+''',
+  '''pk_test_[a-zA-Z0-9]+''',
+  '''SG-[a-zA-Z0-9]+''',
+  '''test-secret''',
+  '''dev-.*-secret''',
+  '''example''',
+  '''placeholder''',
+]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey|secret[_-]?key)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?'''
+secretGroup = 2
+entropy = 3.5
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'''
+
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key ID"
+regex = '''AKIA[0-9A-Z]{16}'''
+
+[[rules]]
+id = "aws-secret-key"
+description = "AWS Secret Access Key"
+regex = '''(?i)aws[_-]?secret[_-]?access[_-]?key\s*[:=]\s*['"]?([a-zA-Z0-9/+=]{40})['"]?'''
+secretGroup = 1
+
+[[rules]]
+id = "google-api-key"
+description = "Google API Key"
+regex = '''AIza[0-9A-Za-z\-_]{35}'''
+
+[[rules]]
+id = "google-oauth-id"
+description = "Google OAuth Client ID"
+regex = '''[0-9]+-[a-z0-9_]{32}\.apps\.googleusercontent\.com'''
+
+[[rules]]
+id = "jwt-secret"
+description = "JWT Secret"
+regex = '''(?i)jwt[_-]?secret\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{16,})['"]?'''
+secretGroup = 1
+
+[[rules]]
+id = "database-url"
+description = "Database Connection String"
+regex = '''(?i)(postgres|mysql|mongodb)://[^:]+:[^@]+@[^\s]+'''
+
+[[rules]]
+id = "midtrans-server-key"
+description = "Midtrans Server Key (Production)"
+regex = '''Mid-server-[a-zA-Z0-9]+'''
+
+[[rules]]
+id = "stripe-live-key"
+description = "Stripe Live Key"
+regex = '''sk_live_[a-zA-Z0-9]+'''
+
+[[rules]]
+id = "nextauth-secret"
+description = "NextAuth Secret"
+regex = '''(?i)nextauth[_-]?secret\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{32,})['"]?'''
+secretGroup = 1
+
+[[rules]]
+id = "encryption-key"
+description = "Encryption Key"
+regex = '''(?i)encryption[_-]?key\s*[:=]\s*['"]?([a-zA-Z0-9+/=]{32,})['"]?'''
+secretGroup = 1

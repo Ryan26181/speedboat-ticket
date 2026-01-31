@@ -1,0 +1,634 @@
+# Security Scanning Workflow
+# Runs comprehensive security checks on push and pull requests
+# Includes: npm audit, ESLint security, OWASP, secret scanning, CodeQL, and security tests
+
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+    inputs:
+      full_scan:
+        description: "Run full OWASP dependency check (slower)"
+        required: false
+        default: "false"
+        type: boolean
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  FAIL_ON_CRITICAL: "true"
+
+jobs:
+  # ============================================
+  # Job 1: Dependency Audit (npm audit)
+  # ============================================
+  dependency-audit:
+    name: 📦 Dependency Audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        id: npm_audit
+        continue-on-error: true
+        run: |
+          echo "## NPM Audit Results" >> $GITHUB_STEP_SUMMARY
+
+          # Run audit and capture output
+          npm audit --json > audit-results.json 2>&1 || true
+
+          # Parse results
+          CRITICAL=$(cat audit-results.json | jq '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(cat audit-results.json | jq '.metadata.vulnerabilities.high // 0')
+          MODERATE=$(cat audit-results.json | jq '.metadata.vulnerabilities.moderate // 0')
+          LOW=$(cat audit-results.json | jq '.metadata.vulnerabilities.low // 0')
+
+          echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔴 Critical | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟠 High | $HIGH |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟡 Moderate | $MODERATE |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟢 Low | $LOW |" >> $GITHUB_STEP_SUMMARY
+
+          # Set outputs
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+
+          # Fail if critical vulnerabilities found
+          if [ "$CRITICAL" -gt 0 ] && [ "${{ env.FAIL_ON_CRITICAL }}" = "true" ]; then
+            echo "::error::Found $CRITICAL critical vulnerabilities"
+            exit 1
+          fi
+
+      - name: Run npm audit fix (dry-run)
+        if: steps.npm_audit.outputs.critical > 0 || steps.npm_audit.outputs.high > 0
+        run: |
+          echo "## Suggested Fixes" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          npm audit fix --dry-run 2>&1 | head -50 >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-results
+          path: audit-results.json
+          retention-days: 30
+
+  # ============================================
+  # Job 2: ESLint Security Rules
+  # ============================================
+  eslint-security:
+    name: 🔍 ESLint Security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install ESLint security plugins
+        run: |
+          npm install --save-dev \
+            eslint-plugin-security@^2.1.0 \
+            eslint-plugin-no-secrets@^1.0.2
+
+      - name: Create security ESLint config
+        run: |
+          cat > eslint.security.config.mjs << 'EOF'
+          import security from "eslint-plugin-security";
+          import noSecrets from "eslint-plugin-no-secrets";
+
+          export default [
+            {
+              files: ["src/**/*.{js,ts,jsx,tsx}"],
+              plugins: {
+                security,
+                "no-secrets": noSecrets,
+              },
+              rules: {
+                // Security plugin rules
+                "security/detect-buffer-noassert": "error",
+                "security/detect-child-process": "warn",
+                "security/detect-disable-mustache-escape": "error",
+                "security/detect-eval-with-expression": "error",
+                "security/detect-new-buffer": "error",
+                "security/detect-no-csrf-before-method-override": "error",
+                "security/detect-non-literal-fs-filename": "warn",
+                "security/detect-non-literal-regexp": "warn",
+                "security/detect-non-literal-require": "warn",
+                "security/detect-object-injection": "warn",
+                "security/detect-possible-timing-attacks": "warn",
+                "security/detect-pseudoRandomBytes": "error",
+                "security/detect-unsafe-regex": "error",
+                
+                // No secrets plugin
+                "no-secrets/no-secrets": ["error", { 
+                  "ignoreContent": ["^sk_test_", "^pk_test_"],
+                  "tolerance": 4.5
+                }],
+              },
+            },
+          ];
+          EOF
+
+      - name: Run ESLint security scan
+        id: eslint_security
+        continue-on-error: true
+        run: |
+          echo "## ESLint Security Results" >> $GITHUB_STEP_SUMMARY
+
+          # Run ESLint with security config
+          npx eslint --config eslint.security.config.mjs \
+            --format json \
+            --output-file eslint-security-results.json \
+            src/ || true
+
+          # Count issues
+          ERRORS=$(cat eslint-security-results.json | jq '[.[].errorCount] | add // 0')
+          WARNINGS=$(cat eslint-security-results.json | jq '[.[].warningCount] | add // 0')
+
+          echo "| Type | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔴 Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟡 Warnings | $WARNINGS |" >> $GITHUB_STEP_SUMMARY
+
+          # Show top issues
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Top Issues" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat eslint-security-results.json | jq -r '
+            [.[].messages[]] | 
+            group_by(.ruleId) | 
+            map({rule: .[0].ruleId, count: length}) | 
+            sort_by(-.count) | 
+            .[0:10] | 
+            .[] | 
+            "\(.count)x \(.rule)"
+          ' >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::warning::Found $ERRORS security-related ESLint errors"
+          fi
+
+      - name: Upload ESLint results
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-security-results
+          path: eslint-security-results.json
+          retention-days: 30
+
+  # ============================================
+  # Job 3: OWASP Dependency Check
+  # ============================================
+  owasp-dependency-check:
+    name: 🛡️ OWASP Dependency Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache OWASP DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.dependency-check
+          key: owasp-db-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            owasp-db-${{ runner.os }}-
+
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: owasp
+        with:
+          project: "speedboat-ticket"
+          path: "."
+          format: "HTML,JSON,SARIF"
+          out: "reports"
+          args: >
+            --enableExperimental
+            --nodeAuditSkipDevDependencies
+            --failOnCVSS 9
+            ${{ github.event.inputs.full_scan == 'true' && '' || '--nvdApiDelay 6000' }}
+
+      - name: Parse OWASP results
+        if: always()
+        run: |
+          echo "## OWASP Dependency Check Results" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f reports/dependency-check-report.json ]; then
+            CRITICAL=$(cat reports/dependency-check-report.json | jq '[.dependencies[].vulnerabilities[]? | select(.severity == "CRITICAL")] | length')
+            HIGH=$(cat reports/dependency-check-report.json | jq '[.dependencies[].vulnerabilities[]? | select(.severity == "HIGH")] | length')
+            MEDIUM=$(cat reports/dependency-check-report.json | jq '[.dependencies[].vulnerabilities[]? | select(.severity == "MEDIUM")] | length')
+            
+            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔴 Critical | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟠 High | $HIGH |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟡 Medium | $MEDIUM |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No report generated" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload OWASP report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owasp-report
+          path: reports/
+          retention-days: 30
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
+        with:
+          sarif_file: reports/dependency-check-report.sarif
+          category: owasp-dependency-check
+
+  # ============================================
+  # Job 4: Secret Scanning
+  # ============================================
+  secret-scanning:
+    name: 🔐 Secret Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        id: gitleaks
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false
+
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        id: trufflehog
+        continue-on-error: true
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified --json
+
+      - name: Scan for hardcoded secrets in code
+        run: |
+          echo "## Secret Scanning Results" >> $GITHUB_STEP_SUMMARY
+
+          FOUND=0
+
+          # Search for potential secrets
+          PATTERNS=(
+            "password\s*=\s*['\"][^'\"]+['\"]"
+            "secret\s*=\s*['\"][^'\"]+['\"]"
+            "api_key\s*=\s*['\"][^'\"]+['\"]"
+            "-----BEGIN.*PRIVATE KEY-----"
+          )
+
+          for pattern in "${PATTERNS[@]}"; do
+            MATCHES=$(grep -rniE "$pattern" --include="*.ts" --include="*.tsx" --include="*.js" src/ 2>/dev/null | grep -v "process.env" | grep -v "example" | grep -v ".test." | head -5 || true)
+            if [ -n "$MATCHES" ]; then
+              echo "⚠️ Found potential secrets matching: $pattern" >> $GITHUB_STEP_SUMMARY
+              FOUND=$((FOUND + 1))
+            fi
+          done
+
+          if [ $FOUND -eq 0 ]; then
+            echo "✅ No hardcoded secrets found in source code" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::warning::Found $FOUND potential secret patterns. Please review."
+          fi
+
+      - name: Check .env files not committed
+        run: |
+          if git ls-files | grep -E '^\.env$|^\.env\.local$|^\.env\.production$'; then
+            echo "::error::.env files should not be committed to the repository"
+            exit 1
+          fi
+          echo "✅ No .env files committed" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Job 5: CodeQL Analysis
+  # ============================================
+  codeql-analysis:
+    name: 🔬 CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["javascript-typescript"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-extended,security-and-quality
+          config-file: .github/codeql/codeql-config.yml
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+        env:
+          SKIP_ENV_VALIDATION: "true"
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
+          NEXTAUTH_URL: "http://localhost:3000"
+          NEXTAUTH_SECRET: "test-secret-for-build-only-32chars"
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  # ============================================
+  # Job 6: Security Tests
+  # ============================================
+  security-tests:
+    name: 🧪 Security Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run security tests
+        id: security_tests
+        run: |
+          echo "## Security Test Results" >> $GITHUB_STEP_SUMMARY
+
+          npm run test:security:coverage 2>&1 | tee test-output.txt || true
+
+          if grep -q "FAIL" test-output.txt; then
+            echo "::error::Security tests failed"
+            FAILED=1
+          else
+            FAILED=0
+          fi
+
+          if [ -f coverage/coverage-summary.json ]; then
+            COVERAGE=$(cat coverage/coverage-summary.json | jq -r '.total.lines.pct')
+            echo "📊 Code Coverage: $COVERAGE%" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          TESTS_PASSED=$(grep -oP '\d+(?= passed)' test-output.txt | head -1 || echo "0")
+          TESTS_FAILED=$(grep -oP '\d+(?= failed)' test-output.txt | head -1 || echo "0")
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | $TESTS_PASSED |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | $TESTS_FAILED |" >> $GITHUB_STEP_SUMMARY
+
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          exit $FAILED
+        env:
+          NEXTAUTH_SECRET: "test-secret-for-testing-minimum-32-characters"
+          ENCRYPTION_KEY: "dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1ieXRlcyE="
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-test-coverage
+          path: coverage/
+          retention-days: 30
+
+  # ============================================
+  # Job 7: License Compliance
+  # ============================================
+  license-check:
+    name: 📜 License Compliance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check licenses
+        run: |
+          echo "## License Check Results" >> $GITHUB_STEP_SUMMARY
+
+          npx license-checker --summary --json > licenses.json
+
+          PROBLEMATIC=$(cat licenses.json | jq -r 'to_entries | .[] | select(.value.licenses | test("GPL|AGPL|SSPL|BUSL"; "i")) | .key' | head -10)
+
+          if [ -n "$PROBLEMATIC" ]; then
+            echo "⚠️ Found potentially problematic licenses:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$PROBLEMATIC" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "::warning::Found GPL/AGPL licensed dependencies. Please review."
+          else
+            echo "✅ No problematic licenses found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### License Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          npx license-checker --summary 2>&1 | head -20 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Job 8: Security Summary
+  # ============================================
+  security-summary:
+    name: 📋 Security Summary
+    runs-on: ubuntu-latest
+    needs:
+      - dependency-audit
+      - eslint-security
+      - owasp-dependency-check
+      - secret-scanning
+      - codeql-analysis
+      - security-tests
+      - license-check
+    if: always()
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "# 🔒 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependency Audit | ${{ needs.dependency-audit.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 ESLint Security | ${{ needs.eslint-security.result == 'success' && '✅ Passed' || '⚠️ Issues' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🛡️ OWASP Check | ${{ needs.owasp-dependency-check.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔐 Secret Scanning | ${{ needs.secret-scanning.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔬 CodeQL | ${{ needs.codeql-analysis.result == 'success' && '✅ Passed' || '⚠️ Issues' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Security Tests | ${{ needs.security-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📜 License Check | ${{ needs.license-check.result == 'success' && '✅ Passed' || '⚠️ Review' }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('🔒 Security Scan Results')
+            );
+
+            const status = {
+              'dependency-audit': '${{ needs.dependency-audit.result }}',
+              'eslint-security': '${{ needs.eslint-security.result }}',
+              'owasp-dependency-check': '${{ needs.owasp-dependency-check.result }}',
+              'secret-scanning': '${{ needs.secret-scanning.result }}',
+              'codeql-analysis': '${{ needs.codeql-analysis.result }}',
+              'security-tests': '${{ needs.security-tests.result }}',
+              'license-check': '${{ needs.license-check.result }}'
+            };
+
+            const failed = Object.values(status).some(s => s === 'failure');
+            const icon = failed ? '❌' : '✅';
+
+            const body = `## 🔒 Security Scan Results ${icon}
+
+            | Check | Status |
+            |-------|--------|
+            | 📦 Dependency Audit | ${status['dependency-audit'] === 'success' ? '✅' : '❌'} |
+            | 🔍 ESLint Security | ${status['eslint-security'] === 'success' ? '✅' : '⚠️'} |
+            | 🛡️ OWASP Check | ${status['owasp-dependency-check'] === 'success' ? '✅' : '❌'} |
+            | 🔐 Secret Scanning | ${status['secret-scanning'] === 'success' ? '✅' : '❌'} |
+            | 🔬 CodeQL | ${status['codeql-analysis'] === 'success' ? '✅' : '⚠️'} |
+            | 🧪 Security Tests | ${status['security-tests'] === 'success' ? '✅' : '❌'} |
+            | 📜 License Check | ${status['license-check'] === 'success' ? '✅' : '⚠️'} |
+
+            ${failed ? '⚠️ **Some security checks failed. Please review before merging.**' : '✅ **All security checks passed!**'}
+
+            [View detailed results](${context.payload.repository.html_url}/actions/runs/${context.runId})
+            `;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            }
+
+      - name: Fail if critical issues
+        if: |
+          needs.dependency-audit.result == 'failure' ||
+          needs.secret-scanning.result == 'failure' ||
+          needs.security-tests.result == 'failure'
+        run: |
+          echo "::error::Critical security checks failed"
+          exit 1

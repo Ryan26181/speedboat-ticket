@@ -156,7 +156,7 @@ const authConfig: NextAuthConfig = {
   callbacks: {
     /**
      * JWT callback - runs on token creation and update
-     * Adds user id and role to the token
+     * Adds user id, role, and passwordChangedAt to the token
      */
     async jwt({ token, user, trigger, session }) {
       // Initial sign in - user object is available
@@ -169,9 +169,24 @@ const authConfig: NextAuthConfig = {
         } else {
           const dbUser = await prisma.user.findUnique({
             where: { id: user.id },
-            select: { role: true },
+            select: { role: true, passwordChangedAt: true },
           });
           token.role = dbUser?.role ?? "USER";
+          // Store passwordChangedAt timestamp for security validation
+          if (dbUser?.passwordChangedAt) {
+            token.passwordChangedAt = dbUser.passwordChangedAt.getTime();
+          }
+        }
+        
+        // Fetch passwordChangedAt for credentials login
+        if (!token.passwordChangedAt) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { passwordChangedAt: true },
+          });
+          if (dbUser?.passwordChangedAt) {
+            token.passwordChangedAt = dbUser.passwordChangedAt.getTime();
+          }
         }
       }
 
@@ -186,11 +201,25 @@ const authConfig: NextAuthConfig = {
     /**
      * Session callback - runs when session is checked
      * Exposes user id and role to the client
+     * Validates that password hasn't changed since token was issued
      */
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
+        
+        // Security: Check if password was changed after JWT was issued
+        // This invalidates sessions when user changes password
+        if (token.passwordChangedAt && token.iat) {
+          const passwordChangedAt = token.passwordChangedAt as number;
+          const tokenIssuedAt = (token.iat as number) * 1000; // Convert to milliseconds
+          
+          if (passwordChangedAt > tokenIssuedAt) {
+            // Password was changed after token was issued
+            // Return empty session to force re-authentication
+            throw new Error("Session expired due to password change. Please sign in again.");
+          }
+        }
       }
       return session;
     },

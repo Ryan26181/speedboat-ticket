@@ -51,11 +51,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -124,10 +119,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return pathWithoutLocale.startsWith(href);
   };
 
-  // Loading state
-  if (status === "loading" || !isMounted) {
+  // Loading state - only show on initial auth check
+  if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -147,7 +142,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     .slice(0, 2) || "U";
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-muted/30 overflow-x-hidden">
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-background border-b flex items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
@@ -298,7 +293,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:pl-64 pt-16 lg:pt-0 min-h-screen">
+      <main className="lg:pl-64 pt-16 lg:pt-0 pb-24 lg:pb-8 min-h-screen">
         <div className="p-4 lg:p-8">{children}</div>
       </main>
 

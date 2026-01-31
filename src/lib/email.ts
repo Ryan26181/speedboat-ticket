@@ -98,15 +98,27 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
       return { success: true };
     }
 
-    const { error } = await resend.emails.send({
+    console.log("[EMAIL] Sending password reset email via Resend...");
+    console.log("[EMAIL] From:", FROM);
+    console.log("[EMAIL] To:", email);
+    
+    const { data, error } = await resend.emails.send({
       from: FROM,
       to: email,
       subject: `Reset your password - ${APP_NAME}`,
       html: template(content),
     });
-    return error ? { success: false, error: error.message } : { success: true };
+    
+    if (error) {
+      console.error("[EMAIL] Resend error:", JSON.stringify(error, null, 2));
+      return { success: false, error: error.message };
+    }
+    
+    console.log("[EMAIL] Password reset email sent successfully, ID:", data?.id);
+    return { success: true };
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unknown error";
+    console.error("[EMAIL] Exception sending password reset:", message);
     return { success: false, error: message };
   }
 }

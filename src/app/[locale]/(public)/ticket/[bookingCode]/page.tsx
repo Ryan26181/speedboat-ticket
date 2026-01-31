@@ -41,8 +41,17 @@ interface TicketData {
     identityType: string;
     identityNumber: string;
     phone: string | null;
+    category?: string;
   };
 }
+
+// Category display config
+const CATEGORY_LABELS: Record<string, { label: string; badge?: string }> = {
+  ADULT: { label: "Dewasa" },
+  ELDERLY: { label: "Lansia", badge: "20% off" },
+  CHILD: { label: "Anak", badge: "50% off" },
+  INFANT: { label: "Bayi", badge: "Gratis" },
+};
 
 interface BookingData {
   id: string;
@@ -348,7 +357,14 @@ export default function TicketPage({ params }: { params: Promise<{ bookingCode: 
               <div className="space-y-4">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Passenger</p>
-                  <p className="font-semibold text-lg">{selectedTicket?.passenger.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-lg">{selectedTicket?.passenger.name}</p>
+                    {selectedTicket?.passenger.category && (
+                      <Badge variant="outline" className="text-xs">
+                        {CATEGORY_LABELS[selectedTicket.passenger.category]?.label || selectedTicket.passenger.category}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {selectedTicket?.passenger.identityType.replace("_", " ")} -{" "}
                     {selectedTicket?.passenger.identityNumber}

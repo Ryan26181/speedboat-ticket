@@ -51,7 +51,10 @@ export const createPortSchema = z.object({
   longitude: longitudeSchema,
   imageUrl: z
     .string()
-    .url("Please enter a valid URL")
+    .refine(
+      (val) => !val || val.startsWith("/") || val.startsWith("http://") || val.startsWith("https://"),
+      "Must be a valid URL or path"
+    )
     .optional()
     .or(z.literal("")),
 });
@@ -91,7 +94,10 @@ export const updatePortSchema = z.object({
   longitude: longitudeSchema,
   imageUrl: z
     .string()
-    .url("Please enter a valid URL")
+    .refine(
+      (val) => !val || val.startsWith("/") || val.startsWith("http://") || val.startsWith("https://"),
+      "Must be a valid URL or path"
+    )
     .optional()
     .nullable(),
 });

@@ -21,15 +21,17 @@ function ResetPasswordContent() {
   const t = useTranslations('auth.resetPassword');
   
   const token = searchParams.get('token');
+  const email = searchParams.get('email');
 
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<Status>(!token ? 'invalid' : 'form');
+  const [status, setStatus] = useState<Status>(!token || !email ? 'invalid' : 'form');
   const [errorMessage, setErrorMessage] = useState('');
 
   const form = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       token: token || '',
+      email: email || '',
       password: '',
       confirmPassword: '',
     },
@@ -39,7 +41,10 @@ function ResetPasswordContent() {
     if (token) {
       form.setValue('token', token);
     }
-  }, [token, form]);
+    if (email) {
+      form.setValue('email', email);
+    }
+  }, [token, email, form]);
 
   const onSubmit = async (data: ResetPasswordInput) => {
     setIsLoading(true);

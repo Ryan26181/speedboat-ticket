@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getRedisConnection } from '@/lib/queue/connection';
 import { coreApi } from '@/lib/midtrans';
 import { logger } from '@/lib/logger';
+import { checkRateLimit } from '@/lib/rate-limit-edge';
 
 interface HealthCheck {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -24,7 +25,38 @@ interface CheckResult {
 
 const startTime = Date.now();
 
+// Health endpoint rate limit: 60 requests per minute (more permissive than API)
+const HEALTH_RATE_LIMIT = {
+  windowMs: 60 * 1000,
+  maxRequests: 60,
+};
+
 export async function GET(req: Request) {
+  // Rate limit by IP to prevent abuse
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    || req.headers.get('x-real-ip') 
+    || 'anonymous';
+  
+  const rateLimit = checkRateLimit(
+    `health:${ip}`,
+    HEALTH_RATE_LIMIT.windowMs,
+    HEALTH_RATE_LIMIT.maxRequests
+  );
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests', retryAfter: Math.ceil(rateLimit.retryAfterMs / 1000) },
+      { 
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil(rateLimit.retryAfterMs / 1000)),
+          'X-RateLimit-Limit': String(HEALTH_RATE_LIMIT.maxRequests),
+          'X-RateLimit-Remaining': '0',
+        }
+      }
+    );
+  }
+
   const url = new URL(req.url);
   const detailed = url.searchParams.get('detailed') === 'true';
 

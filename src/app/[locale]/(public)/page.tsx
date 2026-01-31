@@ -161,86 +161,97 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-primary-900 to-slate-900 py-24 md:py-36">
-        {/* Animated Background Pattern */}
-        <div className="absolute inset-0 opacity-20">
+      {/* Hero Section - Clean Professional Design */}
+      <section className="relative overflow-hidden bg-linear-to-br from-slate-900 via-primary-950 to-slate-900 min-h-[85vh] flex items-center">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          {/* Gradient Orbs */}
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-600/30 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
+        </div>
+        
+        {/* Animated Wave Pattern */}
+        <div className="absolute inset-0 opacity-[0.03]">
           <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <pattern id="waves" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M0 10 Q5 5, 10 10 T20 10" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-primary-400" />
-            </pattern>
-            <rect x="0" y="0" width="100" height="100" fill="url(#waves)" />
+            <defs>
+              <pattern id="wave-pattern" x="0" y="0" width="50" height="20" patternUnits="userSpaceOnUse">
+                <path d="M0 10 Q12.5 0, 25 10 T50 10" fill="none" stroke="white" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect x="0" y="0" width="100" height="100" fill="url(#wave-pattern)" />
           </svg>
         </div>
         
-        {/* Grid Pattern Overlay */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOGMxLjI1NCAwIDIuNDc4LS4xMjggMy42Ni0uMzcyIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMiIvPjwvZz48L3N2Zz4=')] opacity-30"></div>
-        
-        {/* Floating decorative elements */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-primary-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-emerald-400/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-1/3 right-1/4 w-20 h-20 bg-amber-400/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1.5s' }} />
-        
-        {/* Decorative icons */}
-        <div className="absolute top-32 right-20 text-white/5 hidden lg:block">
-          <Anchor className="h-32 w-32" />
+        {/* Decorative Icons */}
+        <div className="absolute top-20 right-[15%] text-white/5 hidden xl:block">
+          <Anchor className="h-64 w-64 rotate-12" />
         </div>
-        <div className="absolute bottom-32 left-20 text-white/5 hidden lg:block">
-          <Waves className="h-24 w-24" />
+        <div className="absolute bottom-20 left-[10%] text-white/5 hidden xl:block">
+          <Ship className="h-48 w-48 -rotate-12" />
+        </div>
+        <div className="absolute top-1/3 left-[5%] text-white/5 hidden lg:block">
+          <Compass className="h-32 w-32" />
         </div>
 
-        <div className="container relative mx-auto px-4">
-          <div className="mx-auto max-w-4xl text-center text-white">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-8 shadow-xl hover:bg-white/15 transition-all duration-300">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+        <div className="container relative mx-auto px-4 py-16 md:py-24">
+          <div className="mx-auto max-w-5xl text-center text-white">
+            {/* Premium Badge - Subtle */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 mb-8">
+              <div className="relative">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full" />
+                <div className="absolute inset-0 w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+              </div>
               <Ship className="h-4 w-4 text-cyan-300" />
-              <span className="text-sm font-semibold">{t('hero.badge')}</span>
+              <span className="text-sm font-medium text-slate-300">{t('hero.badge')}</span>
             </div>
             
-            {/* Main Heading */}
-            <h1 className="text-4xl font-extrabold tracking-tight md:text-6xl lg:text-7xl">
-              <span className="bg-gradient-to-r from-white via-white to-slate-300 bg-clip-text text-transparent">{t('hero.title')}</span>
-              <span className="block mt-4 bg-gradient-to-r from-cyan-300 via-primary-300 to-cyan-300 bg-clip-text text-transparent">{t('hero.subtitle')}</span>
+            {/* Main Heading - Clear Hierarchy */}
+            <h1 className="space-y-1">
+              <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight text-white">
+                {t('hero.title')}
+              </span>
+              <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold bg-linear-to-r from-cyan-400 via-primary-400 to-emerald-400 bg-clip-text text-transparent">
+                {t('hero.subtitle')}
+              </span>
             </h1>
             
-            <p className="mt-8 text-lg text-slate-300 md:text-xl max-w-2xl mx-auto leading-relaxed">
+            {/* Description - Balanced */}
+            <p className="mt-4 md:mt-6 text-base md:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
               {t('hero.description')}
             </p>
             
-            {/* Stats Row */}
-            <div className="mt-10 flex flex-wrap justify-center gap-8 md:gap-12">
-              {stats.map((stat, idx) => (
-                <div key={idx} className="text-center group">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <stat.icon className="h-5 w-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-                    <span className="text-2xl md:text-3xl font-bold text-white">{stat.value}</span>
+            {/* Stats Row - Clean & Professional */}
+            <div className="mt-6 md:mt-8">
+              <div className="inline-flex flex-wrap justify-center divide-x divide-white/10">
+                {stats.map((stat, idx) => (
+                  <div key={idx} className="px-4 md:px-6 py-1 text-center">
+                    <div className="text-xl md:text-2xl font-bold text-white">{stat.value}</div>
+                    <div className="text-xs text-slate-500">{stat.label}</div>
                   </div>
-                  <span className="text-sm text-slate-400">{stat.label}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Search Form */}
-          <div className="mx-auto mt-14 max-w-5xl">
-            <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-2 border border-white/10 shadow-2xl">
+          {/* Search Form - Clean Container */}
+          <div className="mx-auto mt-8 md:mt-10 max-w-4xl relative z-10 pb-16 md:pb-24">
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-2 md:p-3 border border-white/10">
               <SearchForm variant="hero" />
             </div>
           </div>
         </div>
         
-        {/* Bottom Wave */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-            <path d="M0 50L48 45.7C96 41 192 33 288 35.3C384 38 480 52 576 58.3C672 65 768 63 864 55C960 47 1056 33 1152 30C1248 27 1344 35 1392 38.7L1440 43V100H1392C1344 100 1248 100 1152 100C1056 100 960 100 864 100C768 100 672 100 576 100C480 100 384 100 288 100C192 100 96 100 48 100H0V50Z" className="fill-background"/>
+        {/* Smooth Wave Transition */}
+        <div className="absolute -bottom-px left-0 right-0">
+          <svg viewBox="0 0 1440 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto block" preserveAspectRatio="none">
+            <path d="M0 100L48 90C96 80 192 60 288 50C384 40 480 40 576 45C672 50 768 60 864 65C960 70 1056 70 1152 65C1248 60 1344 50 1392 45L1440 40V100H0Z" className="fill-background"/>
           </svg>
         </div>
       </section>
 
       {/* Popular Routes Section */}
-      <section className="py-20 md:py-28 bg-gradient-to-b from-background via-background to-slate-50 dark:to-slate-900/50">
+      <section className="py-16 md:py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="mb-14 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-primary-600 bg-primary-50 dark:bg-primary-900/30 rounded-full mb-4 shadow-sm">
@@ -360,7 +371,7 @@ export default async function HomePage() {
                       </Link>
                     </Button>
                     <Button size="lg" variant="outline" asChild className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm">
-                      <Link href="/help">{t('cta.learnMore')}</Link>
+                      <Link href="/about">{t('cta.learnMore')}</Link>
                     </Button>
                   </div>
                 </div>

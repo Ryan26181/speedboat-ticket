@@ -37,10 +37,6 @@ export async function GET(request: NextRequest) {
   try {
     // Require authenticated user
     const user = await requireAuthUser();
-    
-    // Debug logging
-    console.log("=== /api/bookings DEBUG ===");
-    console.log("user from session:", JSON.stringify(user, null, 2));
 
     const { searchParams } = new URL(request.url);
     const { page, limit, skip } = parsePaginationParams(searchParams);

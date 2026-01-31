@@ -297,6 +297,86 @@ function handlePrismaError(error: PrismaError): NextResponse {
 }
 
 // ============================================
+// IDOR Protection Helpers
+// ============================================
+
+/**
+ * Require access to a booking (IDOR Protection)
+ * Users can only access their own bookings unless admin/operator
+ * @param bookingId - The booking ID to check
+ * @throws NotFoundError if booking doesn't exist
+ * @throws AuthError if user doesn't have access
+ */
+export async function requireBookingAccess(bookingId: string): Promise<{
+  booking: { id: string; userId: string; bookingCode: string };
+  user: { id: string; role: string };
+}> {
+  const user = await requireAuthUser();
+  
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { id: true, userId: true, bookingCode: true },
+  });
+  
+  if (!booking) {
+    throw new NotFoundError("Booking");
+  }
+  
+  // Admin and Operator can access all bookings
+  const isAdminOrOperator = user.role === "ADMIN" || user.role === "OPERATOR";
+  
+  // Regular users can only access their own bookings
+  if (!isAdminOrOperator && booking.userId !== user.id) {
+    throw new AuthError("You don't have permission to access this booking");
+  }
+  
+  return { booking, user };
+}
+
+/**
+ * Require access to a ticket (IDOR Protection)
+ * Users can only access tickets from their own bookings unless admin/operator
+ * @param ticketId - The ticket ID to check
+ * @throws NotFoundError if ticket doesn't exist  
+ * @throws AuthError if user doesn't have access
+ */
+export async function requireTicketAccess(ticketId: string): Promise<{
+  ticket: { id: string; ticketCode: string; bookingId: string };
+  user: { id: string; role: string };
+}> {
+  const user = await requireAuthUser();
+  
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: {
+      id: true,
+      ticketCode: true,
+      bookingId: true,
+      booking: {
+        select: { userId: true },
+      },
+    },
+  });
+  
+  if (!ticket) {
+    throw new NotFoundError("Ticket");
+  }
+  
+  // Admin and Operator can access all tickets
+  const isAdminOrOperator = user.role === "ADMIN" || user.role === "OPERATOR";
+  
+  // Regular users can only access tickets from their own bookings
+  if (!isAdminOrOperator && ticket.booking.userId !== user.id) {
+    throw new AuthError("You don't have permission to access this ticket");
+  }
+  
+  return {
+    ticket: { id: ticket.id, ticketCode: ticket.ticketCode, bookingId: ticket.bookingId },
+    user,
+  };
+}
+
+// ============================================
 // Query Helpers
 // ============================================
 

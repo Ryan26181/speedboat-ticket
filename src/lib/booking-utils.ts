@@ -172,10 +172,54 @@ export function formatAmount(amount: number): string {
 }
 
 /**
- * Calculate total booking amount
+ * Price multipliers for each passenger category
+ */
+export const CATEGORY_PRICE_MULTIPLIERS: Record<string, number> = {
+  ADULT: 1.0,      // Full price
+  ELDERLY: 0.8,    // 20% discount
+  CHILD: 0.5,      // 50% discount
+  INFANT: 0,       // Free
+};
+
+/**
+ * Calculate total booking amount (simple version for backward compatibility)
  */
 export function calculateTotalAmount(pricePerSeat: number, passengers: number): number {
   return pricePerSeat * passengers;
+}
+
+/**
+ * Calculate total booking amount with category-based pricing
+ */
+export function calculateTotalAmountWithCategories(
+  pricePerSeat: number,
+  passengerCounts: {
+    adults?: number;
+    elderly?: number;
+    children?: number;
+    infants?: number;
+  }
+): number {
+  const adults = passengerCounts.adults || 0;
+  const elderly = passengerCounts.elderly || 0;
+  const children = passengerCounts.children || 0;
+  const infants = passengerCounts.infants || 0;
+  
+  const total = 
+    (adults * pricePerSeat * CATEGORY_PRICE_MULTIPLIERS.ADULT) +
+    (elderly * pricePerSeat * CATEGORY_PRICE_MULTIPLIERS.ELDERLY) +
+    (children * pricePerSeat * CATEGORY_PRICE_MULTIPLIERS.CHILD) +
+    (infants * pricePerSeat * CATEGORY_PRICE_MULTIPLIERS.INFANT);
+  
+  return Math.round(total);
+}
+
+/**
+ * Calculate price for a single passenger based on category
+ */
+export function calculatePassengerPrice(pricePerSeat: number, category: string): number {
+  const multiplier = CATEGORY_PRICE_MULTIPLIERS[category] ?? 1.0;
+  return Math.round(pricePerSeat * multiplier);
 }
 
 /**

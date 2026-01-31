@@ -42,6 +42,7 @@ interface PortData {
   city: string;
   province: string;
   address: string | null;
+  imageUrl: string | null;
   latitude: number | null;
   longitude: number | null;
   createdAt: string;

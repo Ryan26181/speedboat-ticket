@@ -138,15 +138,18 @@
       "tryAnother": "Try another email",
       "success": {
         "title": "Check your email",
-        "message": "If an account exists for",
-        "instructions": "we've sent a password reset link. The link will expire in 1 hour."
+        "message": "If an account exists for this email, we've sent a password reset link.",
+        "instructions": "we've sent a password reset link. The link will expire in 1 hour.",
+        "notice": "The reset link will expire in 1 hour. If you don't see the email, check your spam folder."
       }
     },
     "resetPassword": {
       "title": "Reset Password",
       "subtitle": "Enter your new password below.",
       "newPassword": "New Password",
+      "newPasswordPlaceholder": "Enter your new password",
       "confirmPassword": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Confirm your new password",
       "submit": "Reset Password",
       "resetting": "Resetting...",
       "backToLogin": "Back to Login",
@@ -513,7 +516,7 @@
     "help": "Help Center",
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",
-    "copyright": "© {year} {appName}. All rights reserved.",
+    "copyright": "All rights reserved.",
     "links": {
       "explore": {
         "popularRoutes": "Popular Routes",
@@ -540,7 +543,6 @@
         "licenses": "Licenses"
       }
     },
-    "copyright": "All rights reserved.",
     "madeWith": "Made with",
     "inIndonesia": "in Indonesia"
   },

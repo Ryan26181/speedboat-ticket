@@ -1,0 +1,30 @@
+# CodeQL configuration for security analysis
+
+name: "Speedboat Ticket Security Config"
+
+# Specify query suites
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Additional queries for JavaScript/TypeScript
+query-filters:
+  - exclude:
+      id: js/unused-local-variable
+  - exclude:
+      id: js/commented-out-code
+
+# Paths to analyze
+paths:
+  - src
+
+# Paths to ignore
+paths-ignore:
+  - node_modules
+  - .next
+  - coverage
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "__tests__"
+  - "*.config.*"
+  - prisma/seed.ts

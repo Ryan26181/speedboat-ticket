@@ -21,9 +21,77 @@ import {
 } from "@/lib/payment-utils";
 import { enqueueWebhook } from "@/lib/queue/payment-queue";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit-edge";
 
 // Use queue in production, direct processing in development
 const USE_QUEUE = process.env.USE_WEBHOOK_QUEUE === 'true';
+
+// Webhook rate limiting configuration
+// Allow 100 webhooks per minute per IP (generous for legitimate traffic, blocks abuse)
+const WEBHOOK_RATE_LIMIT = {
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 100,
+};
+
+// Midtrans IP ranges for webhook verification (Security Enhancement)
+// Reference: https://docs.midtrans.com/docs/ip-address
+const MIDTRANS_IP_WHITELIST = [
+  // Midtrans Production IPs
+  '103.208.23.0/24',
+  '103.208.22.0/24',
+  '103.127.16.0/24',
+  '103.127.17.0/24',
+  // Midtrans Sandbox IPs (same range)
+  '103.208.23.0/24',
+];
+
+// Enable IP whitelisting (disable for local testing)
+const ENABLE_IP_WHITELIST = process.env.NODE_ENV === 'production' && process.env.MIDTRANS_IP_WHITELIST !== 'false';
+
+/**
+ * Check if IP is within CIDR range
+ */
+function ipInCIDR(ip: string, cidr: string): boolean {
+  const [range, bits = '32'] = cidr.split('/');
+  const mask = ~(2 ** (32 - parseInt(bits)) - 1);
+  
+  const ipParts = ip.split('.').map(Number);
+  const rangeParts = range.split('.').map(Number);
+  
+  const ipNum = (ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3];
+  const rangeNum = (rangeParts[0] << 24) | (rangeParts[1] << 16) | (rangeParts[2] << 8) | rangeParts[3];
+  
+  return (ipNum & mask) === (rangeNum & mask);
+}
+
+/**
+ * Validate if request IP is from Midtrans
+ */
+function isValidMidtransIP(request: NextRequest): { valid: boolean; ip: string } {
+  // Get client IP from various headers (in order of trust)
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  const cfConnectingIP = request.headers.get('cf-connecting-ip'); // Cloudflare
+  
+  // Use the first IP in x-forwarded-for, or fallback to other headers
+  const clientIP = forwardedFor?.split(',')[0]?.trim() || realIP || cfConnectingIP || 'unknown';
+  
+  // Skip validation if disabled or IP unknown
+  if (!ENABLE_IP_WHITELIST || clientIP === 'unknown') {
+    return { valid: true, ip: clientIP };
+  }
+  
+  // Check against whitelist
+  const isWhitelisted = MIDTRANS_IP_WHITELIST.some(cidr => {
+    try {
+      return ipInCIDR(clientIP, cidr);
+    } catch {
+      return false;
+    }
+  });
+  
+  return { valid: isWhitelisted, ip: clientIP };
+}
 
 // Type for webhook lock result
 interface WebhookLockResult {
@@ -45,7 +113,9 @@ interface WebhookLockResult {
  * Receive Midtrans webhook notification (Enterprise Grade)
  * 
  * Features:
+ * - IP whitelisting (Midtrans IPs only in production)
  * - Signature verification (security)
+ * - Amount reconciliation (tamper detection)
  * - Queue-based processing (scalability)
  * - Webhook lock (prevents race conditions)
  * - State machine (validates transitions)
@@ -56,6 +126,46 @@ interface WebhookLockResult {
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   const requestId = `wh_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  
+  // IP Whitelist Check (Security Layer 1)
+  const ipCheck = isValidMidtransIP(request);
+  if (!ipCheck.valid) {
+    logger.warn('[WEBHOOK_IP_REJECTED]', { 
+      requestId, 
+      ip: ipCheck.ip,
+      reason: 'IP not in Midtrans whitelist',
+    });
+    return Response.json(
+      { status: 'error', message: 'Forbidden' },
+      { status: 403 }
+    );
+  }
+  
+  // Rate Limiting Check (Security Layer 2)
+  // Prevents webhook flooding attacks even from valid IPs
+  const rateLimitId = `webhook:${ipCheck.ip}`;
+  const rateLimit = checkRateLimit(
+    rateLimitId,
+    WEBHOOK_RATE_LIMIT.windowMs,
+    WEBHOOK_RATE_LIMIT.maxRequests
+  );
+  
+  if (!rateLimit.allowed) {
+    logger.warn('[WEBHOOK_RATE_LIMITED]', {
+      requestId,
+      ip: ipCheck.ip,
+      retryAfterMs: rateLimit.retryAfterMs,
+    });
+    return Response.json(
+      { status: 'error', message: 'Too many requests' },
+      { 
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil(rateLimit.retryAfterMs / 1000)),
+        },
+      }
+    );
+  }
   
   try {
     const body: MidtransNotification = await request.json();

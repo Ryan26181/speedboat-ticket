@@ -23,8 +23,8 @@ export async function POST() {
       );
     }
 
-    // Allow admin or via internal API key
-    const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
+    // Allow admin only
+    const isAdmin = session.user.role === 'ADMIN';
     
     if (!isAdmin) {
       return NextResponse.json(

@@ -13,7 +13,11 @@ async function main() {
     },
     include: { 
       payment: true,
-      tickets: true,
+      tickets: {
+        include: {
+          passenger: true,
+        },
+      },
     },
   });
 
@@ -22,7 +26,7 @@ async function main() {
     console.log('ID:', booking.id);
     console.log('Code:', booking.bookingCode);
     console.log('Status:', booking.status);
-    console.log('Payment Status:', booking.paymentStatus);
+    console.log('Payment Status:', booking.payment?.status ?? 'N/A');
     console.log('');
     
     if (booking.payment) {
@@ -37,7 +41,7 @@ async function main() {
     console.log('=== TICKETS ===');
     console.log('Count:', booking.tickets.length);
     booking.tickets.forEach(t => {
-      console.log(`- ${t.ticketCode}: ${t.passengerName}`);
+      console.log(`- ${t.ticketCode}: ${t.passenger.name}`);
     });
   } else {
     console.log('Booking not found');
