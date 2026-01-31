@@ -1,0 +1,25 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /admin/*
+Disallow: /api/*
+Disallow: /operator/*
+
+# Disallow auth pages
+Disallow: /login
+Disallow: /register
+Disallow: /auth/*
+
+# Disallow internal pages
+Disallow: /_next/*
+
+# Allow specific static files
+Allow: /_next/static/
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://speedboat-ticket.com/sitemap.xml
